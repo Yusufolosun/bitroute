@@ -38,3 +38,22 @@
     (get-decimals () (response uint uint))
   )
 )
+
+;; Read-only functions
+
+;; Returns best DEX and expected output for a given swap
+;; TODO: Replace mock quotes with actual DEX contract-calls
+(define-read-only (get-best-route (token-in principal) (token-out principal) (amount-in uint))
+  (let
+    (
+      (alex-quote u1000)
+      (velar-quote u950)
+    )
+    (ok {
+      best-dex: (if (> alex-quote velar-quote) DEX-ALEX DEX-VELAR),
+      expected-amount-out: (if (> alex-quote velar-quote) alex-quote velar-quote),
+      alex-quote: alex-quote,
+      velar-quote: velar-quote
+    })
+  )
+)
