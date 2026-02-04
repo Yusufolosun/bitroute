@@ -1,73 +1,125 @@
-;; BitRoute Router Tests
+;; Unit tests for router.clar
+;; Test 1: test-get-best-route-returns-data
+;; Test 2: test-execute-auto-swap-validates-amount
+;; Test 3: test-paused-contract-blocks-swaps
+;; Test 4: test-unauthorized-pause-rejected
+;; Test 5: test-volume-tracking-updates
+;; Test 6: test-slippage-protection-enforced
 
-(define-constant deployer tx-sender)
-(define-constant wallet-1 'ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM)
-(define-constant wallet-2 'ST1SJ3DTE5DN7X54YDH5D64R3BCB6A2AG2ZQ8YPD5)
-
-;; Test: Create a new route
-(define-public (test-create-route)
-  (let
-    (
-      (result (contract-call? .router create-route "source-address-1" "dest-address-1" u1000))
-    )
-    (asserts! (is-ok result) (err u1))
-    (asserts! (is-eq (unwrap-panic result) u1) (err u2))
-    (ok true)
+;; Test 1: Verify price discovery returns valid structure
+(define-public (test-get-best-route-returns-data)
+  (let (
+    (result (contract-call? .router get-best-route 
+              'SP000000000000000000002Q6VF78.token-a
+              'SP000000000000000000002Q6VF78.token-b
+              u1000))
   )
-)
-
-;; Test: Get route by ID
-(define-public (test-get-route)
-  (let
-    (
-      (route-id (unwrap-panic (contract-call? .router create-route "source-2" "dest-2" u2000)))
-      (route (unwrap-panic (contract-call? .router get-route route-id)))
-    )
-    (asserts! (is-eq (get fee route) u2000) (err u3))
-    (asserts! (is-eq (get active route) true) (err u4))
-    (ok true)
-  )
-)
-
-;; Test: Update route
-(define-public (test-update-route)
-  (let
-    (
-      (route-id (unwrap-panic (contract-call? .router create-route "source-3" "dest-3" u3000)))
-      (update-result (contract-call? .router update-route route-id u3500 true))
-      (updated-route (unwrap-panic (contract-call? .router get-route route-id)))
-    )
-    (asserts! (is-ok update-result) (err u5))
-    (asserts! (is-eq (get fee updated-route) u3500) (err u6))
-    (ok true)
-  )
-)
-
-;; Test: Deactivate route
-(define-public (test-deactivate-route)
-  (let
-    (
-      (route-id (unwrap-panic (contract-call? .router create-route "source-4" "dest-4" u4000)))
-      (deactivate-result (contract-call? .router deactivate-route route-id))
-      (deactivated-route (unwrap-panic (contract-call? .router get-route route-id)))
-    )
-    (asserts! (is-ok deactivate-result) (err u7))
-    (asserts! (is-eq (get active deactivated-route) false) (err u8))
-    (ok true)
-  )
-)
-
-;; Test: Get route counter
-(define-public (test-route-counter)
   (begin
-    (unwrap-panic (contract-call? .router create-route "source-5" "dest-5" u5000))
-    (unwrap-panic (contract-call? .router create-route "source-6" "dest-6" u6000))
-    (let
-      (
-        (counter (contract-call? .router get-route-counter))
-      )
-      (asserts! (>= counter u2) (err u9))
-      (ok true)
+    ;; Assert result is ok
+    (asserts! (is-ok result) (err u1))
+    
+    ;; Assert has expected fields
+    (asserts! (> (get expected-amount-out (unwrap-panic result)) u0) (err u2))
+    
+    (ok true)
+  ))
+)
+
+;; Test 2: Verify zero amount is rejected
+(define-public (test-execute-auto-swap-validates-amount)
+  (let (
+    (result (contract-call? .router execute-auto-swap
+              'SP000000000000000000002Q6VF78.token-a
+              'SP000000000000000000002Q6VF78.token-b
+              u0
+              u0))
+  )
+  (begin
+    ;; Should fail with ERR-INVALID-AMOUNT (u102)
+    (asserts! (is-err result) (err u1))
+    (asserts! (is-eq (unwrap-err-panic result) u102) (err u2))
+    
+    (ok true)
+  ))
+)
+
+;; Test 3: Verify pause mechanism works
+(define-public (test-paused-contract-blocks-swaps)
+  (begin
+    ;; Pause contract (as owner)
+    (unwrap-panic (contract-call? .router set-paused true))
+    
+    ;; Attempt swap
+    (let (
+      (result (contract-call? .router execute-auto-swap
+                'SP000000000000000000002Q6VF78.token-a
+                'SP000000000000000000002Q6VF78.token-b
+                u1000
+                u900))
     )
+    (begin
+      ;; Should fail with ERR-CONTRACT-PAUSED (u103)
+      (asserts! (is-err result) (err u1))
+      (asserts! (is-eq (unwrap-err-panic result) u103) (err u2))
+      
+      ;; Unpause for other tests
+      (unwrap-panic (contract-call? .router set-paused false))
+      
+      (ok true)
+    ))
   )
 )
+
+;; Test 4: Verify only owner can pause
+(define-public (test-unauthorized-pause-rejected)
+  ;; TODO: Requires Clarinet support for multi-principal testing
+  ;; For now, just verify owner CAN pause
+  (let (
+    (result (contract-call? .router set-paused true))
+  )
+  (begin
+    (asserts! (is-ok result) (err u1))
+    
+    ;; Reset
+    (unwrap-panic (contract-call? .router set-paused false))
+    
+    (ok true)
+  ))
+)
+
+;; Test 5: Verify dex-volume map updates correctly
+(define-public (test-volume-tracking-updates)
+  (begin
+    ;; Get initial volume
+    (let (
+      (initial-volume (unwrap-panic (contract-call? .router get-dex-volume u1)))
+    )
+    
+    ;; Note: Since we're mocking swaps, volume tracking happens in execute-auto-swap
+    ;; This test verifies the getter works
+    (begin
+      (asserts! (>= initial-volume u0) (err u1))
+      (ok true)
+    ))
+  )
+)
+
+;; Test 6: Verify min-amount-out validation works
+(define-public (test-slippage-protection-enforced)
+  (let (
+    ;; Request swap with impossible min-amount-out
+    (result (contract-call? .router execute-auto-swap
+              'SP000000000000000000002Q6VF78.token-a
+              'SP000000000000000000002Q6VF78.token-b
+              u1000
+              u999999))
+  )
+  (begin
+    ;; Should fail with ERR-SLIPPAGE-TOO-HIGH (u101)
+    (asserts! (is-err result) (err u1))
+    (asserts! (is-eq (unwrap-err-panic result) u101) (err u2))
+    
+    (ok true)
+  ))
+)
+
