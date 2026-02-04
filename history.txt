@@ -1,0 +1,11 @@
+#V2
+ cd /c/Users/OLOSUN/Documents/code/bitroute/contracts && clarinet console
+ clarinet console
+ exit
+ ::help
+ (contract-call? .router is-paused)
+ ::get_contracts_interfaces
+ exit
+ clarinet test
+ cd /c/Users/OLOSUN/Documents/code/bitroute/contracts && bash test-all.sh
+ cd /c/Users/OLOSUN/Documents/code/bitroute && npm test
