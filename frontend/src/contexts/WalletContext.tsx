@@ -56,10 +56,16 @@ export function WalletProvider({ children }: { children: ReactNode }) {
       redirectTo: '/',
       onFinish: () => {
         console.log('✅ Wallet connection finished');
+        // Wait for user session to be saved, then update state
         setTimeout(() => {
-          checkConnection();
-          window.location.reload();
-        }, 100);
+          if (userSession.isUserSignedIn()) {
+            const userData = userSession.loadUserData();
+            const address = userData.profile.stxAddress[DEFAULT_NETWORK];
+            console.log('✅ Wallet connected:', address);
+            setUserAddress(address);
+            setIsConnected(true);
+          }
+        }, 500);
       },
       onCancel: () => {
         console.log('❌ User cancelled connection');
@@ -69,10 +75,10 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   };
 
   const disconnect = () => {
+    console.log('🔌 Disconnecting wallet...');
     userSession.signUserOut();
     setUserAddress(null);
     setIsConnected(false);
-    window.location.reload();
   };
 
   if (!mounted) {
