@@ -1,0 +1,37 @@
+{
+  "name": "bitroute",
+  "version": "1.0.0",
+  "description": "Bitcoin Route Optimizer - A decentralized routing solution on Stacks blockchain",
+  "private": true,
+  "scripts": {
+    "dev": "npm --prefix frontend run dev",
+    "build": "npm --prefix frontend run build",
+    "start": "npm --prefix frontend run start",
+    "test:contracts": "cd contracts && clarinet test",
+    "check:contracts": "cd contracts && clarinet check",
+    "deploy": "node scripts/deploy.js",
+    "install:all": "npm install && cd frontend && npm install"
+  },
+  "keywords": [
+    "bitcoin",
+    "stacks",
+    "routing",
+    "blockchain",
+    "clarity",
+    "smart-contracts"
+  ],
+  "author": "BitRoute Team",
+  "license": "MIT",
+  "devDependencies": {
+    "@stacks/network": "^6.13.0",
+    "@stacks/transactions": "^6.13.0"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/bitroute.git"
+  }
+}
