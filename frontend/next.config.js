@@ -4,6 +4,13 @@ const nextConfig = {
   webpack: (config) => {
     config.resolve.fallback = {
       ...config.resolve.fallback,
+      crypto: false,
+      stream: false,
+      assert: false,
+      http: false,
+      https: false,
+      os: false,
+      url: false,
       fs: false,
       net: false,
       tls: false,
