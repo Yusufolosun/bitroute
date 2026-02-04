@@ -37,7 +37,11 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     console.log('🔍 Checking wallet connection...');
     if (userSession.isUserSignedIn()) {
       const userData = userSession.loadUserData();
-      const address = userData.profile.stxAddress[DEFAULT_NETWORK];
+      console.log('📦 User data:', userData);
+      // Try different address formats (Leather uses different structure than Hiro)
+      const address = userData.profile.stxAddress?.[DEFAULT_NETWORK] 
+        || userData.profile.stxAddress?.mainnet 
+        || userData.profile.stxAddress?.testnet;
       console.log('✅ Wallet connected:', address);
       setUserAddress(address);
       setIsConnected(true);
@@ -60,7 +64,11 @@ export function WalletProvider({ children }: { children: ReactNode }) {
         setTimeout(() => {
           if (userSession.isUserSignedIn()) {
             const userData = userSession.loadUserData();
-            const address = userData.profile.stxAddress[DEFAULT_NETWORK];
+            console.log('📦 User data after connect:', userData);
+            // Try different address formats
+            const address = userData.profile.stxAddress?.[DEFAULT_NETWORK] 
+              || userData.profile.stxAddress?.mainnet 
+              || userData.profile.stxAddress?.testnet;
             console.log('✅ Wallet connected:', address);
             setUserAddress(address);
             setIsConnected(true);
