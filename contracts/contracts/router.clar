@@ -110,3 +110,45 @@
     )
   )
 )
+
+;; === ADMIN FUNCTIONS ===
+
+;; Emergency circuit breaker - only contract owner can pause
+(define-public (set-paused (paused bool))
+  (begin
+    ;; Only contract owner can pause
+    (asserts! (is-eq tx-sender CONTRACT-OWNER) ERR-NOT-AUTHORIZED)
+    
+    ;; Update state
+    (ok (var-set contract-paused paused))
+  )
+)
+
+;; === READ-ONLY HELPERS ===
+
+;; Check if contract is paused
+(define-read-only (is-paused)
+  (ok (var-get contract-paused))
+)
+
+;; Query total volume for a specific DEX
+(define-read-only (get-dex-volume (dex-id uint))
+  (ok 
+    (get total-volume 
+      (default-to 
+        { total-volume: u0 }
+        (map-get? dex-volume { dex-id: dex-id })
+      )
+    )
+  )
+)
+
+;; Query user's swap history and statistics
+(define-read-only (get-user-stats (user principal))
+  (ok 
+    (default-to 
+      { swap-count: u0, total-volume: u0 }
+      (map-get? user-swaps { user: user })
+    )
+  )
+)
