@@ -1,27 +1,25 @@
 'use client';
 
-import { useConnect } from '@/hooks/useConnect';
+import { useWallet } from '@/contexts/WalletContext';
 
 export default function WalletConnect() {
-  const { userAddress, isConnected, connect, disconnect } = useConnect();
+  const { userAddress, isConnected, connect, disconnect } = useWallet();
 
-  // Format address for display (ST1...GZGM)
   const formatAddress = (address: string) => {
-    if (!address) return '';
     return `${address.slice(0, 4)}...${address.slice(-4)}`;
   };
 
   if (isConnected && userAddress) {
     return (
       <div className="flex items-center gap-3">
-        <div className="px-4 py-2 bg-gray-100 dark:bg-gray-800 rounded-lg">
-          <p className="text-sm font-mono text-gray-700 dark:text-gray-300">
+        <div className="px-4 py-2 bg-gray-100 dark:bg-gray-800 rounded-lg border border-gray-300 dark:border-gray-600">
+          <p className="text-sm font-mono text-gray-900 dark:text-gray-100 font-semibold">
             {formatAddress(userAddress)}
           </p>
         </div>
         <button
           onClick={disconnect}
-          className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors"
+          className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors font-medium"
         >
           Disconnect
         </button>
