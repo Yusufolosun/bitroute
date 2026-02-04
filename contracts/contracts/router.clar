@@ -57,3 +57,56 @@
     })
   )
 )
+
+;; Public functions
+
+;; Main swap function - auto-routes to best DEX
+;; TODO: Add actual token transfers and DEX integrations
+(define-public (execute-auto-swap
+    (token-in <ft-trait>)
+    (token-out <ft-trait>)
+    (amount-in uint)
+    (min-amount-out uint))
+  (begin
+    ;; Step 1: Check not paused
+    (asserts! (not (var-get contract-paused)) ERR-CONTRACT-PAUSED)
+    
+    ;; Step 2: Validate amount
+    (asserts! (> amount-in u0) ERR-INVALID-AMOUNT)
+    
+    ;; Step 3-8: Get route and execute swap
+    (let
+      (
+        (route (unwrap! (get-best-route (contract-of token-in) (contract-of token-out) amount-in) ERR-DEX-CALL-FAILED))
+        (best-dex (get best-dex route))
+        (amount-out amount-in)
+        (current-dex-volume (default-to { total-volume: u0 } (map-get? dex-volume { dex-id: best-dex })))
+        (current-user-swaps (default-to { swap-count: u0, total-volume: u0 } (map-get? user-swaps { user: tx-sender })))
+      )
+      
+      ;; Step 5: Validate slippage protection
+      (asserts! (>= amount-out min-amount-out) ERR-SLIPPAGE-TOO-HIGH)
+      
+      ;; Step 6: Update dex-volume
+      (map-set dex-volume
+        { dex-id: best-dex }
+        { total-volume: (+ (get total-volume current-dex-volume) amount-in) }
+      )
+      
+      ;; Step 7: Update user-swaps
+      (map-set user-swaps
+        { user: tx-sender }
+        { 
+          swap-count: (+ (get swap-count current-user-swaps) u1),
+          total-volume: (+ (get total-volume current-user-swaps) amount-in)
+        }
+      )
+      
+      ;; Step 8: Return result
+      (ok {
+        dex-used: best-dex,
+        amount-out: amount-out
+      })
+    )
+  )
+)
