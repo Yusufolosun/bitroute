@@ -1,0 +1,103 @@
+'use client';
+
+import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { AppConfig, UserSession, showConnect } from '@stacks/connect';
+import { DEFAULT_NETWORK } from '@/lib/constants';
+
+interface WalletContextType {
+  userAddress: string | null;
+  isConnected: boolean;
+  connect: () => void;
+  disconnect: () => void;
+  userSession: UserSession | null;
+}
+
+const WalletContext = createContext<WalletContextType>({
+  userAddress: null,
+  isConnected: false,
+  connect: () => {},
+  disconnect: () => {},
+  userSession: null,
+});
+
+const appConfig = new AppConfig(['store_write', 'publish_data']);
+const userSession = new UserSession({ appConfig });
+
+export function WalletProvider({ children }: { children: ReactNode }) {
+  const [userAddress, setUserAddress] = useState<string | null>(null);
+  const [isConnected, setIsConnected] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    checkConnection();
+  }, []);
+
+  const checkConnection = () => {
+    console.log('🔍 Checking wallet connection...');
+    if (userSession.isUserSignedIn()) {
+      const userData = userSession.loadUserData();
+      const address = userData.profile.stxAddress[DEFAULT_NETWORK];
+      console.log('✅ Wallet connected:', address);
+      setUserAddress(address);
+      setIsConnected(true);
+    } else {
+      console.log('❌ No wallet connected');
+    }
+  };
+
+  const connect = () => {
+    console.log('🔌 Initiating wallet connection...');
+    showConnect({
+      appDetails: {
+        name: 'BitRoute',
+        icon: window.location.origin + '/bitroute-icon.png',
+      },
+      redirectTo: '/',
+      onFinish: () => {
+        console.log('✅ Wallet connection finished');
+        setTimeout(() => {
+          checkConnection();
+          window.location.reload();
+        }, 100);
+      },
+      onCancel: () => {
+        console.log('❌ User cancelled connection');
+      },
+      userSession,
+    });
+  };
+
+  const disconnect = () => {
+    userSession.signUserOut();
+    setUserAddress(null);
+    setIsConnected(false);
+    window.location.reload();
+  };
+
+  if (!mounted) {
+    return <>{children}</>;
+  }
+
+  return (
+    <WalletContext.Provider
+      value={{
+        userAddress,
+        isConnected,
+        connect,
+        disconnect,
+        userSession,
+      }}
+    >
+      {children}
+    </WalletContext.Provider>
+  );
+}
+
+export function useWallet() {
+  const context = useContext(WalletContext);
+  if (!context) {
+    throw new Error('useWallet must be used within WalletProvider');
+  }
+  return context;
+}
