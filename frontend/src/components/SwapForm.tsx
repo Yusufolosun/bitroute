@@ -210,7 +210,8 @@ export default function SwapForm() {
             onClick={handleGetQuote}
             disabled={isLoading}
             className="w-full py-4 bg-orange-400 hover:bg-orange-500 text-white font-semibold rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >(
+          >
+            {isLoading ? (
               <span className="flex items-center justify-center gap-2">
                 <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
@@ -218,14 +219,23 @@ export default function SwapForm() {
                 </svg>
                 Getting Quote...
               </span>
-            ) : ( || isLoading}
-          className="w-full py-4 bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-xl transition-colors shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
-        >
-          {!isConnected ? 'Connect Wallet to Swap' : isLoading ? 'Processing...t Best Price'}
+            ) : (
+              'Get Best Price'
+            )}
           </button>
         )}
 
         {/* Swap Button */}
+        <button
+          onClick={handleSwap}
+          disabled={!isConnected || !isFormValid || !amountOut || isLoading}
+          className="w-full py-4 bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-xl transition-colors shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
+        >
+          {!isConnected ? 'Connect Wallet to Swap' : isLoading ? 'Processing...' : 'Swap Tokens'}
+        </button>
+      </div>
+
+      {/* Quote Display */}
       {amountOut && routeInfo && tokenIn && tokenOut && (
         <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4 space-y-2">
           <div className="flex justify-between items-center">
@@ -248,17 +258,7 @@ export default function SwapForm() {
             <span className="text-gray-500 dark:text-gray-500">Velar Quote:</span>
             <span className="text-gray-700 dark:text-gray-300">{routeInfo.velarQuote}</span>
           </div>
-          <div className="flex justify-between items-center pt-2 border-t border-blue-200 dark:border-blue-800rk:text-white">
-              1 {tokenIn.symbol} = {(parseFloat(amountOut) / parseFloat(amountIn)).toFixed(6)} {tokenOut.symbol}
-            </span>
-          </div>
-          <div className="flex justify-between items-center mb-2">
-            <span className="text-sm text-gray-600 dark:text-gray-400">Route</span>
-            <span className="font-semibold text-orange-600 dark:text-orange-400">
-              ALEX {/* TODO: Show actual DEX from quote */}
-            </span>
-          </div>
-          <div className="flex justify-between items-center">
+          <div className="flex justify-between items-center pt-2 border-t border-blue-200 dark:border-blue-800">
             <span className="text-sm text-gray-600 dark:text-gray-400">Minimum Received</span>
             <span className="font-semibold text-gray-900 dark:text-white">
               {(parseFloat(amountOut) * (1 - parseFloat(slippage) / 100)).toFixed(6)} {tokenOut.symbol}
