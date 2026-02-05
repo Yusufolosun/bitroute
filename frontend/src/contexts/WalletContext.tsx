@@ -35,16 +35,57 @@ export function WalletProvider({ children }: { children: ReactNode }) {
 
   const checkConnection = () => {
     console.log('🔍 Checking wallet connection...');
+    
     if (userSession.isUserSignedIn()) {
       const userData = userSession.loadUserData();
       console.log('📦 User data:', userData);
-      // Try different address formats (Leather uses different structure than Hiro)
-      const address = userData.profile.stxAddress?.[DEFAULT_NETWORK] 
-        || userData.profile.stxAddress?.mainnet 
-        || userData.profile.stxAddress?.testnet;
-      console.log('✅ Wallet connected:', address);
-      setUserAddress(address);
-      setIsConnected(true);
+      console.log('📍 Profile:', userData.profile);
+      console.log('🌐 DEFAULT_NETWORK:', DEFAULT_NETWORK);
+      
+      let address: string | null = null;
+      
+      // Try multiple methods to get address
+      
+      // Method 1: Try testnet first (most common for development)
+      if (userData.profile?.stxAddress?.testnet) {
+        address = userData.profile.stxAddress.testnet;
+        console.log('✅ Method 1 (testnet):', address);
+      }
+      
+      // Method 2: Try mainnet
+      else if (userData.profile?.stxAddress?.mainnet) {
+        address = userData.profile.stxAddress.mainnet;
+        console.log('✅ Method 2 (mainnet):', address);
+      }
+      
+      // Method 3: Try DEFAULT_NETWORK
+      else if (userData.profile?.stxAddress?.[DEFAULT_NETWORK]) {
+        address = userData.profile.stxAddress[DEFAULT_NETWORK];
+        console.log('✅ Method 3 (DEFAULT_NETWORK):', address);
+      }
+      
+      // Method 4: Direct string format
+      else if (typeof userData.profile?.stxAddress === 'string') {
+        address = userData.profile.stxAddress;
+        console.log('✅ Method 4 (direct string):', address);
+      }
+      
+      // Method 5: Leather wallet format (identities)
+      else if ((userData as any).identities?.length > 0) {
+        address = (userData as any).identities[0].address;
+        console.log('✅ Method 5 (identities):', address);
+      }
+      
+      if (address) {
+        console.log('✅ Final address:', address);
+        console.log('📝 Setting state - address:', address, 'connected: true');
+        setUserAddress(address);
+        setIsConnected(true);
+        console.log('✅ State updated successfully');
+      } else {
+        console.error('❌ Could not extract address from user data');
+        console.log('Full userData structure:', JSON.stringify(userData, null, 2));
+      }
     } else {
       console.log('❌ No wallet connected');
     }
@@ -62,17 +103,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
         console.log('✅ Wallet connection finished');
         // Wait for user session to be saved, then update state
         setTimeout(() => {
-          if (userSession.isUserSignedIn()) {
-            const userData = userSession.loadUserData();
-            console.log('📦 User data after connect:', userData);
-            // Try different address formats
-            const address = userData.profile.stxAddress?.[DEFAULT_NETWORK] 
-              || userData.profile.stxAddress?.mainnet 
-              || userData.profile.stxAddress?.testnet;
-            console.log('✅ Wallet connected:', address);
-            setUserAddress(address);
-            setIsConnected(true);
-          }
+          checkConnection();
         }, 500);
       },
       onCancel: () => {
