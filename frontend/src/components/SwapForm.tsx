@@ -4,53 +4,112 @@ import { useState } from 'react';
 import TokenSelector, { Token } from './TokenSelector';
 import AmountInput from './AmountInput';
 import { useWallet } from '@/contexts/WalletContext';
+import { useContract } from '@/hooks/useContract';
+import { microToStx } from '@/lib/stacks';
+import { CONTRACT_ADDRESS, DEFAULT_NETWORK } from '@/lib/constants';
 
 export default function SwapForm() {
-  const { isConnected } = useWallet();
+  const { isConnected, userAddress } = useWallet();
+  const { getQuote, swap, isLoading, error, getDexName } = useContract();
   
   const [tokenIn, setTokenIn] = useState<Token | null>(null);
   const [tokenOut, setTokenOut] = useState<Token | null>(null);
   const [amountIn, setAmountIn] = useState('');
   const [amountOut, setAmountOut] = useState('');
   const [slippage, setSlippage] = useState('0.5');
-  const [isLoading, setIsLoading] = useState(false);
+  const [routeInfo, setRouteInfo] = useState<{
+    dexName: string;
+    alexQuote: string;
+    velarQuote: string;
+  } | null>(null);
+  const [txId, setTxId] = useState<string | null>(null);
 
   const handleSwapTokens = () => {
-    // Flip tokens and amounts
     setTokenIn(tokenOut);
     setTokenOut(tokenIn);
     setAmountIn(amountOut);
-    setAmountOut(amountIn);
+    setAmountOut('');
+    setRouteInfo(null);
   };
 
-  const handleGetQuote = () => {
+  const handleGetQuote = async () => {
     if (!tokenIn || !tokenOut || !amountIn) return;
     
-    setIsLoading(true);
-    // TODO: Call get-best-route contract function
+    // Build token addresses (mock for now - will need actual deployed addresses)
+    const tokenInAddress = tokenIn.address || `${CONTRACT_ADDRESS[DEFAULT_NETWORK]}.${tokenIn.symbol.toLowerCase()}`;
+    const tokenOutAddress = tokenOut.address || `${CONTRACT_ADDRESS[DEFAULT_NETWORK]}.${tokenOut.symbol.toLowerCase()}`;
     
-    // Mock quote for now
-    setTimeout(() => {
-      const mockOutput = (parseFloat(amountIn) * 0.95).toFixed(6);
-      setAmountOut(mockOutput);
-      setIsLoading(false);
-    }, 500);
+    const quote = await getQuote(
+      tokenInAddress,
+      tokenOutAddress,
+      parseFloat(amountIn)
+    );
+
+    if (quote) {
+      const outputAmount = microToStx(quote.expectedAmountOut);
+      setAmountOut(outputAmount.toString());
+      
+      setRouteInfo({
+        dexName: getDexName(quote.bestDex),
+        alexQuote: microToStx(quote.alexQuote).toFixed(6),
+        velarQuote: microToStx(quote.velarQuote).toFixed(6),
+      });
+    }
   };
 
-  const handleSwap = () => {
-    if (!isConnected) {
-      alert('Please connect your wallet first');
+  const handleSwap = async () => {
+    if (!isConnected || !tokenIn || !tokenOut || !amountIn || !amountOut) {
+      alert('Please fill all fields and get a quote first');
       return;
     }
+
+    // Calculate minimum amount out based on slippage
+    const minOut = parseFloat(amountOut) * (1 - parseFloat(slippage) / 100);
     
-    // TODO: Call execute-auto-swap contract function
-    console.log('Executing swap:', { tokenIn, tokenOut, amountIn, amountOut, slippage });
+    const tokenInAddress = tokenIn.address || `${CONTRACT_ADDRESS[DEFAULT_NETWORK]}.${tokenIn.symbol.toLowerCase()}`;
+    const tokenOutAddress = tokenOut.address || `${CONTRACT_ADDRESS[DEFAULT_NETWORK]}.${tokenOut.symbol.toLowerCase()}`;
+
+    await swap(
+      tokenInAddress,
+      tokenOutAddress,
+      parseFloat(amountIn),
+      minOut,
+      (txId) => {
+        setTxId(txId);
+        alert(`Swap successful! Transaction ID: ${txId}`);
+        // Reset form
+        setAmountIn('');
+        setAmountOut('');
+        setRouteInfo(null);
+      },
+      (error) => {
+        alert(`Swap failed: ${error}`);
+      }
+    );
   };
 
   const isFormValid = tokenIn && tokenOut && amountIn && parseFloat(amountIn) > 0;
 
   return (
     <div className="space-y-4">
+      {/* Error Display */}
+      {error && (
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4">
+          <p className="text-sm text-red-600 dark:text-red-400">
+            ⚠️ {error}
+          </p>
+        </div>
+      )}
+
+      {/* Success Display */}
+      {txId && (
+        <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl p-4">
+          <p className="text-sm text-green-600 dark:text-green-400">
+            ✅ Swap submitted! TX: {txId.slice(0, 10)}...
+          </p>
+        </div>
+      )}
+
       {/* Token In */}
       <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4">
         <TokenSelector
@@ -65,7 +124,8 @@ export default function SwapForm() {
             value={amountIn}
             onChange={(val) => {
               setAmountIn(val);
-              setAmountOut(''); // Clear output when input changes
+              setAmountOut('');
+              setRouteInfo(null);
             }}
             label="Amount"
             disabled={!isConnected}
@@ -150,27 +210,45 @@ export default function SwapForm() {
             onClick={handleGetQuote}
             disabled={isLoading}
             className="w-full py-4 bg-orange-400 hover:bg-orange-500 text-white font-semibold rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isLoading ? 'Getting Quote...' : 'Get Best Price'}
+          >(
+              <span className="flex items-center justify-center gap-2">
+                <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                </svg>
+                Getting Quote...
+              </span>
+            ) : ( || isLoading}
+          className="w-full py-4 bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-xl transition-colors shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
+        >
+          {!isConnected ? 'Connect Wallet to Swap' : isLoading ? 'Processing...t Best Price'}
           </button>
         )}
 
         {/* Swap Button */}
-        <button
-          onClick={handleSwap}
-          disabled={!isConnected || !isFormValid || !amountOut}
-          className="w-full py-4 bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-xl transition-colors shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
-        >
-          {!isConnected ? 'Connect Wallet to Swap' : 'Swap Tokens'}
-        </button>
-      </div>
-
-      {/* Quote Display (when available) */}
-      {amountOut && tokenIn && tokenOut && (
-        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4">
-          <div className="flex justify-between items-center mb-2">
+      {amountOut && routeInfo && tokenIn && tokenOut && (
+        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4 space-y-2">
+          <div className="flex justify-between items-center">
             <span className="text-sm text-gray-600 dark:text-gray-400">Rate</span>
             <span className="font-semibold text-gray-900 dark:text-white">
+              1 {tokenIn.symbol} = {(parseFloat(amountOut) / parseFloat(amountIn)).toFixed(6)} {tokenOut.symbol}
+            </span>
+          </div>
+          <div className="flex justify-between items-center">
+            <span className="text-sm text-gray-600 dark:text-gray-400">Best Route</span>
+            <span className="font-semibold text-orange-600 dark:text-orange-400">
+              {routeInfo.dexName}
+            </span>
+          </div>
+          <div className="flex justify-between items-center text-xs">
+            <span className="text-gray-500 dark:text-gray-500">ALEX Quote:</span>
+            <span className="text-gray-700 dark:text-gray-300">{routeInfo.alexQuote}</span>
+          </div>
+          <div className="flex justify-between items-center text-xs">
+            <span className="text-gray-500 dark:text-gray-500">Velar Quote:</span>
+            <span className="text-gray-700 dark:text-gray-300">{routeInfo.velarQuote}</span>
+          </div>
+          <div className="flex justify-between items-center pt-2 border-t border-blue-200 dark:border-blue-800rk:text-white">
               1 {tokenIn.symbol} = {(parseFloat(amountOut) / parseFloat(amountIn)).toFixed(6)} {tokenOut.symbol}
             </span>
           </div>
