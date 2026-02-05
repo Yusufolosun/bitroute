@@ -1,4 +1,5 @@
 import WalletConnect from '@/components/WalletConnect';
+import SwapForm from '@/components/SwapForm';
 
 export default function Home() {
   return (
@@ -21,10 +22,10 @@ export default function Home() {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8">
-          <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+      <main className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6">
+          <div className="text-center mb-6">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
               Swap Bitcoin L2 Assets
             </h2>
             <p className="text-gray-600 dark:text-gray-400">
@@ -32,12 +33,7 @@ export default function Home() {
             </p>
           </div>
 
-          {/* Swap form will go here */}
-          <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-6 text-center">
-            <p className="text-gray-500 dark:text-gray-400">
-              Connect your wallet to start swapping
-            </p>
-          </div>
+          <SwapForm />
         </div>
 
         {/* Features */}
