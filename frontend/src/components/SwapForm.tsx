@@ -46,6 +46,7 @@ import { CONTRACT_ADDRESS, DEFAULT_NETWORK } from '@/lib/constants';
 import { useTransaction } from '@/contexts/TransactionContext';
 import { TransactionStatus } from '@/types/transaction';
 import QuoteSkeleton from './QuoteSkeleton';
+import { trackQuote, trackSwap } from '@/lib/analytics';
 
 export default function SwapForm() {
   const { isConnected, userAddress } = useWallet();
@@ -111,6 +112,12 @@ export default function SwapForm() {
         velarQuote: microToStx(quote.velarQuote).toFixed(6),
       });
       setQuoteTimestamp(Date.now());
+      // Track quote event
+      trackQuote({
+        tokenIn: tokenIn.symbol,
+        tokenOut: tokenOut.symbol,
+        bestDex: getDexName(quote.bestDex),
+      });
     }
   };
 
@@ -160,6 +167,14 @@ export default function SwapForm() {
         });
         
         setIsPending(false);
+        
+        // Track swap event
+        trackSwap({
+          tokenIn: tokenIn.symbol,
+          tokenOut: tokenOut.symbol,
+          amountIn: amountIn,
+          dex: routeInfo?.dexName || 'Unknown',
+        });
         
         // Monitor transaction status
         checkTransactionStatus(txId);
