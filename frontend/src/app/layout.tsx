@@ -11,8 +11,30 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "BitRoute - Universal Liquidity Layer",
-  description: "Auto-route swaps across Bitcoin L2 DEXs",
+  title: "BitRoute - Universal Liquidity Layer for Bitcoin L2s",
+  description: "Auto-route token swaps across ALEX and Velar DEXs on Stacks blockchain for best prices. Non-custodial, secure, and Bitcoin-powered DeFi aggregator.",
+  keywords: ["DeFi", "DEX aggregator", "Stacks", "Bitcoin", "ALEX", "Velar", "cryptocurrency", "trading"],
+  authors: [{ name: "BitRoute Team" }],
+  openGraph: {
+    title: "BitRoute - DEX Aggregator for Stacks",
+    description: "Get the best prices for token swaps on Stacks blockchain",
+    type: "website",
+    locale: "en_US",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "BitRoute - Universal Liquidity Layer",
+    description: "Auto-route swaps across ALEX and Velar for best prices",
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+  viewport: {
+    width: "device-width",
+    initialScale: 1,
+    maximumScale: 1,
+  },
 };
 
 export default function RootLayout({
