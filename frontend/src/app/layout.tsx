@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 
 import { WalletProvider } from "@/contexts/WalletContext";
 import { TransactionProvider } from "@/contexts/TransactionContext";
+import ErrorBoundary from "@/components/ErrorBoundary";
 import "./globals.css";
 
 const inter = Inter({
@@ -22,11 +23,13 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <WalletProvider>
-          <TransactionProvider>
-            {children}
-          </TransactionProvider>
-        </WalletProvider>
+        <ErrorBoundary>
+          <WalletProvider>
+            <TransactionProvider>
+              {children}
+            </TransactionProvider>
+          </WalletProvider>
+        </ErrorBoundary>
       </body>
     </html>
   );
