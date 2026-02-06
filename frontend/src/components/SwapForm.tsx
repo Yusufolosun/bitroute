@@ -155,9 +155,32 @@ export default function SwapForm() {
         );
         const data = await response.json();
         
+        // Log confirmations
+        if (data.tx_status === 'pending') {
+          console.log(`⏳ Confirmations: ${data.confirmations || 0}`);
+        }
+        
         if (data.tx_status === 'success') {
+          console.log(`✅ Transaction confirmed! Total confirmations: ${data.confirmations}`);
           updateTransactionStatus(txId, TransactionStatus.SUCCESS);
           clearInterval(poll);
+        } else if (data.tx_status === 'abort_by_response' || data.tx_status === 'abort_by_post_condition') {
+          updateTransactionStatus(txId, TransactionStatus.FAILED, 'Transaction aborted');
+          clearInterval(poll);
+        }
+        
+        if (attempts >= maxAttempts) {
+          console.warn('⚠️ Polling timeout - transaction may still be pending');
+          clearInterval(poll);
+        }
+      } catch (error) {
+        console.error('Error checking tx status:', error);
+        if (attempts >= 3) {
+          updateTransactionStatus(txId, TransactionStatus.FAILED, 'Status check failed');
+          clearInterval(poll);
+        }
+      }
+    }, 10000);
         } else if (data.tx_status === 'abort_by_response' || data.tx_status === 'abort_by_post_condition') {
           updateTransactionStatus(txId, TransactionStatus.FAILED, 'Transaction aborted');
           clearInterval(poll);
