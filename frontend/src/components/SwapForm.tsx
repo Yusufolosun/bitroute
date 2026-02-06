@@ -1,3 +1,13 @@
+  const calculatePriceImpact = () => {
+    if (!amountIn || !amountOut || !tokenIn || !tokenOut) return 0;
+    const inputValue = parseFloat(amountIn);
+    const outputValue = parseFloat(amountOut);
+    // Simplified calculation (would need actual token prices)
+    const expectedRate = 1.0; // 1:1 for demo
+    const actualRate = outputValue / inputValue;
+    const impact = ((expectedRate - actualRate) / expectedRate) * 100;
+    return Math.abs(impact);
+  };
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -224,6 +234,29 @@ export default function SwapForm() {
           ℹ️ Fees include: Network fee (~0.002 STX) + DEX fee (0.3%)
         </div>
       )}
+
+      {/* Price Impact Warning */}
+      {(() => {
+        const impact = calculatePriceImpact();
+        if (impact > 1) {
+          return (
+            <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-xl p-3 mt-2">
+              <div className="flex items-start gap-2">
+                <span className="text-yellow-600 dark:text-yellow-400">⚠️</span>
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-yellow-800 dark:text-yellow-200">
+                    High Price Impact
+                  </p>
+                  <p className="text-xs text-yellow-700 dark:text-yellow-300 mt-1">
+                    This swap will move the price by ~{impact.toFixed(2)}%. Consider splitting into smaller trades.
+                  </p>
+                </div>
+              </div>
+            </div>
+          );
+        }
+        return null;
+      })()}
 
       {/* Token In */}
       <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4">
