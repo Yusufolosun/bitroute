@@ -26,7 +26,24 @@ export default function TransactionHistory() {
     );
   };
 
-  if (history.length === 0) return null;
+  if (history.length === 0) {
+    return (
+      <div className="mt-8 bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6">
+        <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
+          Recent Transactions
+        </h3>
+        <div className="text-center py-12">
+          <div className="text-6xl mb-4">📜</div>
+          <p className="text-gray-500 dark:text-gray-400 mb-2">
+            No transactions yet
+          </p>
+          <p className="text-sm text-gray-400 dark:text-gray-500">
+            Your swap history will appear here
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="mt-8 bg-white dark:bg-gray-900 rounded-xl shadow p-4">
