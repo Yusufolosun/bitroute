@@ -1,3 +1,6 @@
+'use client';
+
+import { useState, useEffect } from 'react';
 import WalletConnect from '@/components/WalletConnect';
 import SwapForm from '@/components/SwapForm';
 import TransactionToast from '@/components/TransactionToast';
@@ -5,6 +8,23 @@ import TransactionHistory from '@/components/TransactionHistory';
 import NetworkStatus from '@/components/NetworkStatus';
 
 export default function Home() {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
+        <div className="text-center">
+          <div className="animate-spin h-12 w-12 border-4 border-orange-500 border-t-transparent rounded-full mx-auto mb-4" />
+          <p className="text-gray-600 dark:text-gray-400">Loading BitRoute...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
       {/* Header */}
