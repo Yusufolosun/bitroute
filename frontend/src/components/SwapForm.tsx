@@ -225,6 +225,23 @@ export default function SwapForm() {
         </div>
       )}
 
+      {/* Estimated Fee Display */}
+      {amountOut && (
+        <div className="flex justify-between items-center mt-2">
+          <span className="text-sm text-gray-600 dark:text-gray-400">
+            Estimated Fee
+          </span>
+          <span className="font-semibold text-gray-900 dark:text-white">
+            ~0.003 STX (~$0.006)
+          </span>
+        </div>
+      )}
+      {amountOut && (
+        <div className="mt-2 p-2 bg-gray-50 dark:bg-gray-800 rounded text-xs text-gray-500 dark:text-gray-400">
+          ℹ️ Fees include: Network fee (~0.002 STX) + DEX fee (0.3%)
+        </div>
+      )}
+
       {/* Token In */}
       <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4">
         <TokenSelector
