@@ -30,6 +30,7 @@ export default function SwapForm() {
   const [txId, setTxId] = useState<string | null>(null);
   const [errorState, setErrorState] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
+  const [quoteTimestamp, setQuoteTimestamp] = useState<number | null>(null);
 
   const handleSwapTokens = () => {
     setTokenIn(tokenOut);
@@ -53,14 +54,13 @@ export default function SwapForm() {
     );
 
     if (quote) {
-      const outputAmount = microToStx(quote.expectedAmountOut);
       setAmountOut(outputAmount.toString());
-      
       setRouteInfo({
         dexName: getDexName(quote.bestDex),
         alexQuote: microToStx(quote.alexQuote).toFixed(6),
         velarQuote: microToStx(quote.velarQuote).toFixed(6),
       });
+      setQuoteTimestamp(Date.now());
     }
   };
 
