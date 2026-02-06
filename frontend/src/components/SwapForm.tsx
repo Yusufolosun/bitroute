@@ -27,6 +27,7 @@ export default function SwapForm() {
     velarQuote: string;
   } | null>(null);
   const [txId, setTxId] = useState<string | null>(null);
+  const [errorState, setErrorState] = useState<string | null>(null);
 
   const handleSwapTokens = () => {
     setTokenIn(tokenOut);
@@ -63,7 +64,7 @@ export default function SwapForm() {
 
   const handleSwap = async () => {
     if (!isConnected || !tokenIn || !tokenOut || !amountIn || !amountOut) {
-      alert('Please fill all fields and get a quote first');
+      setErrorState('Please fill all fields and get a quote first');
       return;
     }
 
@@ -114,6 +115,7 @@ export default function SwapForm() {
       },
       (error) => {
         updateTransactionStatus(tempTxId, TransactionStatus.FAILED, error);
+        setErrorState(error);
       }
     );
   };
@@ -154,15 +156,15 @@ export default function SwapForm() {
   return (
     <div className="space-y-4">
       {/* Error Display */}
-      {error && (
+      {errorState && (
         <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4 flex items-start gap-3">
           <span className="text-2xl">⚠️</span>
           <div className="flex-1">
             <div className="font-bold text-red-700 dark:text-red-300 mb-1">Transaction Error</div>
-            <div className="text-sm text-red-600 dark:text-red-400">{error}</div>
+            <div className="text-sm text-red-600 dark:text-red-400">{errorState}</div>
           </div>
           <button
-            onClick={() => setError(null)}
+            onClick={() => setErrorState(null)}
             className="text-red-400 hover:text-red-600 dark:hover:text-red-200 ml-2 text-lg"
           >
             ✕
