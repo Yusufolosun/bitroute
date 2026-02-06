@@ -7,11 +7,15 @@ import { useWallet } from '@/contexts/WalletContext';
 import { useContract } from '@/hooks/useContract';
 import { microToStx } from '@/lib/stacks';
 import { CONTRACT_ADDRESS, DEFAULT_NETWORK } from '@/lib/constants';
+import { useTransaction } from '@/contexts/TransactionContext';
+import { TransactionStatus } from '@/types/transaction';
 
 export default function SwapForm() {
   const { isConnected, userAddress } = useWallet();
   const { getQuote, swap, isLoading, error, getDexName } = useContract();
   
+  const { addTransaction, updateTransactionStatus } = useTransaction();
+
   const [tokenIn, setTokenIn] = useState<Token | null>(null);
   const [tokenOut, setTokenOut] = useState<Token | null>(null);
   const [amountIn, setAmountIn] = useState('');
@@ -70,23 +74,79 @@ export default function SwapForm() {
     const tokenInAddress = tokenIn.address!;
     const tokenOutAddress = tokenOut.address!;
 
+    // Create transaction record
+    const tempTxId = `temp-${Date.now()}`;
+    addTransaction({
+      txId: tempTxId,
+      type: 'swap',
+      tokenIn: tokenIn.symbol,
+      tokenOut: tokenOut.symbol,
+      amountIn: amountIn,
+      amountOut: amountOut,
+      dex: routeInfo?.dexName || 'Unknown',
+    });
+
     await swap(
       tokenInAddress,
       tokenOutAddress,
       parseFloat(amountIn),
       minOut,
       (txId) => {
-        setTxId(txId);
-        alert(`Swap successful! Transaction ID: ${txId}`);
+        // Update with real TX ID
+        updateTransactionStatus(tempTxId, TransactionStatus.PENDING);
+        addTransaction({
+          txId: txId,
+          type: 'swap',
+          tokenIn: tokenIn.symbol,
+          tokenOut: tokenOut.symbol,
+          amountIn: amountIn,
+          amountOut: amountOut,
+          dex: routeInfo?.dexName || 'Unknown',
+        });
+        
+        // Monitor transaction status
+        checkTransactionStatus(txId);
+        
         // Reset form
         setAmountIn('');
         setAmountOut('');
         setRouteInfo(null);
       },
       (error) => {
-        alert(`Swap failed: ${error}`);
+        updateTransactionStatus(tempTxId, TransactionStatus.FAILED, error);
       }
     );
+  };
+
+  const checkTransactionStatus = async (txId: string) => {
+    // Poll for transaction confirmation
+    let attempts = 0;
+    const maxAttempts = 30; // 5 minutes max
+    
+    const poll = setInterval(async () => {
+      attempts++;
+      
+      try {
+        const response = await fetch(
+          `https://api.testnet.hiro.so/extended/v1/tx/${txId}`
+        );
+        const data = await response.json();
+        
+        if (data.tx_status === 'success') {
+          updateTransactionStatus(txId, TransactionStatus.SUCCESS);
+          clearInterval(poll);
+        } else if (data.tx_status === 'abort_by_response' || data.tx_status === 'abort_by_post_condition') {
+          updateTransactionStatus(txId, TransactionStatus.FAILED, 'Transaction aborted');
+          clearInterval(poll);
+        }
+        
+        if (attempts >= maxAttempts) {
+          clearInterval(poll);
+        }
+      } catch (error) {
+        console.error('Error checking tx status:', error);
+      }
+    }, 10000); // Check every 10 seconds
   };
 
   const isFormValid = tokenIn && tokenOut && amountIn && parseFloat(amountIn) > 0;
