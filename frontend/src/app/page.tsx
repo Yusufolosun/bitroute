@@ -2,6 +2,7 @@ import WalletConnect from '@/components/WalletConnect';
 import SwapForm from '@/components/SwapForm';
 import TransactionToast from '@/components/TransactionToast';
 import TransactionHistory from '@/components/TransactionHistory';
+import NetworkStatus from '@/components/NetworkStatus';
 
 export default function Home() {
   return (
@@ -18,7 +19,10 @@ export default function Home() {
                 Universal Liquidity Layer
               </p>
             </div>
-            <WalletConnect />
+            <div className="flex items-center gap-4">
+              <NetworkStatus />
+              <WalletConnect />
+            </div>
           </div>
         </div>
       </header>
