@@ -67,6 +67,7 @@ export default function SwapForm() {
     );
 
     if (quote) {
+      const outputAmount = microToStx(quote.expectedAmountOut);
       setAmountOut(outputAmount.toString());
       setRouteInfo({
         dexName: getDexName(quote.bestDex),
