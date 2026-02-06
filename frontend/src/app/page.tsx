@@ -1,5 +1,6 @@
 import WalletConnect from '@/components/WalletConnect';
 import SwapForm from '@/components/SwapForm';
+import TransactionToast from '@/components/TransactionToast';
 
 export default function Home() {
   return (
@@ -35,6 +36,8 @@ export default function Home() {
 
           <SwapForm />
         </div>
+
+        <TransactionToast />
 
         {/* Features */}
         <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
