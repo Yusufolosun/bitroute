@@ -3,6 +3,10 @@
 import { useTransaction } from '@/contexts/TransactionContext';
 import { TransactionStatus } from '@/types/transaction';
 import { useEffect, useState } from 'react';
+
+export default function TransactionToast() {
+  const { current } = useTransaction();
+  const [visible, setVisible] = useState(false);
   const [copied, setCopied] = useState(false);
 
   const copyTxId = () => {
@@ -12,10 +16,6 @@ import { useEffect, useState } from 'react';
       setTimeout(() => setCopied(false), 2000);
     }
   };
-
-export default function TransactionToast() {
-  const { current } = useTransaction();
-  const [visible, setVisible] = useState(false);
 
   useEffect(() => {
     if (current) {

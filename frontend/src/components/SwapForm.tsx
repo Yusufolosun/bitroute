@@ -145,21 +145,17 @@ export default function SwapForm() {
     // Poll for transaction confirmation
     let attempts = 0;
     const maxAttempts = 30; // 5 minutes max
-    
     const poll = setInterval(async () => {
       attempts++;
-      
       try {
         const response = await fetch(
           `https://api.testnet.hiro.so/extended/v1/tx/${txId}`
         );
         const data = await response.json();
-        
         // Log confirmations
         if (data.tx_status === 'pending') {
           console.log(`⏳ Confirmations: ${data.confirmations || 0}`);
         }
-        
         if (data.tx_status === 'success') {
           console.log(`✅ Transaction confirmed! Total confirmations: ${data.confirmations}`);
           updateTransactionStatus(txId, TransactionStatus.SUCCESS);
@@ -168,7 +164,6 @@ export default function SwapForm() {
           updateTransactionStatus(txId, TransactionStatus.FAILED, 'Transaction aborted');
           clearInterval(poll);
         }
-        
         if (attempts >= maxAttempts) {
           console.warn('⚠️ Polling timeout - transaction may still be pending');
           clearInterval(poll);
@@ -181,18 +176,6 @@ export default function SwapForm() {
         }
       }
     }, 10000);
-        } else if (data.tx_status === 'abort_by_response' || data.tx_status === 'abort_by_post_condition') {
-          updateTransactionStatus(txId, TransactionStatus.FAILED, 'Transaction aborted');
-          clearInterval(poll);
-        }
-        
-        if (attempts >= maxAttempts) {
-          clearInterval(poll);
-        }
-      } catch (error) {
-        console.error('Error checking tx status:', error);
-      }
-    }, 10000); // Check every 10 seconds
   };
 
   const isFormValid = tokenIn && tokenOut && amountIn && parseFloat(amountIn) > 0;

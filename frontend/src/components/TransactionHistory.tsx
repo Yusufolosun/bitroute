@@ -1,38 +1,46 @@
-    const exportToCSV = () => {
-      const csvContent = [
-        ['Timestamp', 'Type', 'Token In', 'Token Out', 'Amount In', 'Amount Out', 'DEX', 'Status', 'TX ID'],
-        ...history.map(tx => [
-          new Date(tx.timestamp).toISOString(),
-          tx.type,
-          tx.tokenIn,
-          tx.tokenOut,
-          tx.amountIn,
-          tx.amountOut,
-          tx.dex,
-          tx.status,
-          tx.txId,
-        ])
-      ].map(row => row.join(',')).join('\n');
 
-      const blob = new Blob([csvContent], { type: 'text/csv' });
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `bitroute-history-${Date.now()}.csv`;
-      a.click();
-      window.URL.revokeObjectURL(url);
-    };
-  const handleRetry = (tx: any) => {
+'use client';
+
+import { useTransaction } from '@/contexts/TransactionContext';
+import { TransactionStatus, Transaction } from '@/types/transaction';
+import { useState } from 'react';
+
+const TransactionHistory = () => {
+  const { history, clearHistory } = useTransaction();
+  const [filter, setFilter] = useState<TransactionStatus | 'all'>('all');
+
+  const exportToCSV = () => {
+    const csvContent = [
+      ['Timestamp', 'Type', 'Token In', 'Token Out', 'Amount In', 'Amount Out', 'DEX', 'Status', 'TX ID'],
+      ...history.map((tx: Transaction) => [
+        new Date(tx.timestamp).toISOString(),
+        tx.type,
+        tx.tokenIn,
+        tx.tokenOut,
+        tx.amountIn,
+        tx.amountOut,
+        tx.dex,
+        tx.status,
+        tx.txId,
+      ])
+    ].map(row => row.join(',')).join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `bitroute-history-${Date.now()}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+  };
+
+  const handleRetry = (tx: Transaction) => {
     // Populate swap form with failed transaction details
     console.log('🔄 Retrying transaction:', tx);
     // This would require lifting state up or using a global store
     // For now, just log
     alert(`Retry feature: Navigate to swap form and enter:\n${tx.tokenIn} → ${tx.tokenOut}\nAmount: ${tx.amountIn}`);
   };
-'use client';
-
-import { useTransaction } from '@/contexts/TransactionContext';
-import { TransactionStatus } from '@/types/transaction';
 
 export default function TransactionHistory() {
   const { history, clearHistory } = useTransaction();
@@ -57,6 +65,7 @@ export default function TransactionHistory() {
     );
   };
 
+  export default TransactionHistory;
   if (history.length === 0) {
     return (
       <div className="mt-8 bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6">
