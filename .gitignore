@@ -4,10 +4,26 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# Environment variables
+# Environment files
 .env
 .env.local
 .env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+npm-debug.log*
 
 # Build outputs
 dist/
@@ -15,20 +31,12 @@ build/
 .next/
 out/
 
-# OS files
-.DS_Store
-Thumbs.db
-
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
+# Dependencies
+node_modules/
 
 # Clarinet
-.cache/
 contracts/.cache/
+contracts/deployments/*.yaml.bak
 
-# Logs
-*.log
-logs/
+# Screenshots (keep in docs/)
+!docs/screenshots/
