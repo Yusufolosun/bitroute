@@ -1,3 +1,10 @@
+  const handleRetry = (tx: any) => {
+    // Populate swap form with failed transaction details
+    console.log('🔄 Retrying transaction:', tx);
+    // This would require lifting state up or using a global store
+    // For now, just log
+    alert(`Retry feature: Navigate to swap form and enter:\n${tx.tokenIn} → ${tx.tokenOut}\nAmount: ${tx.amountIn}`);
+  };
 'use client';
 
 import { useTransaction } from '@/contexts/TransactionContext';
@@ -107,6 +114,14 @@ export default function TransactionHistory() {
             >
               {tx.txId.slice(0, 8)}...{tx.txId.slice(-8)} →
             </a>
+            {tx.status === TransactionStatus.FAILED && (
+              <button
+                onClick={() => handleRetry(tx)}
+                className="mt-2 w-full py-2 text-xs bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition-colors"
+              >
+                🔄 Retry Swap
+              </button>
+            )}
           </div>
         ))}
       </div>
