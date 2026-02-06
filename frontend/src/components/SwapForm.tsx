@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import TokenSelector, { Token } from './TokenSelector';
 import AmountInput from './AmountInput';
 import { useWallet } from '@/contexts/WalletContext';
@@ -31,6 +31,19 @@ export default function SwapForm() {
   const [errorState, setErrorState] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
   const [quoteTimestamp, setQuoteTimestamp] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!quoteTimestamp || !amountOut) return;
+    
+    const interval = setInterval(() => {
+      const age = Date.now() - quoteTimestamp;
+      if (age > 30000) { // 30 seconds
+        console.warn('Quote is stale, consider refreshing');
+      }
+    }, 5000);
+    
+    return () => clearInterval(interval);
+  }, [quoteTimestamp, amountOut]);
 
   const handleSwapTokens = () => {
     setTokenIn(tokenOut);
