@@ -9,6 +9,7 @@ import { microToStx } from '@/lib/stacks';
 import { CONTRACT_ADDRESS, DEFAULT_NETWORK } from '@/lib/constants';
 import { useTransaction } from '@/contexts/TransactionContext';
 import { TransactionStatus } from '@/types/transaction';
+import QuoteSkeleton from './QuoteSkeleton';
 
 export default function SwapForm() {
   const { isConnected, userAddress } = useWallet();
@@ -325,7 +326,9 @@ export default function SwapForm() {
       </div>
 
       {/* Quote Display */}
-      {amountOut && routeInfo && tokenIn && tokenOut && (
+      {isLoading && !amountOut && <QuoteSkeleton />}
+
+      {amountOut && routeInfo && tokenIn && tokenOut && !isLoading && (
         <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4 space-y-2">
           <div className="flex justify-between items-center">
             <span className="text-sm text-gray-600 dark:text-gray-400">Rate</span>
