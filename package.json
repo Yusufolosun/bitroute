@@ -1,7 +1,7 @@
 {
   "name": "bitroute",
   "version": "1.0.0",
-  "description": "Bitcoin Route Optimizer - A decentralized routing solution on Stacks blockchain",
+  "description": "BitRoute: DEX aggregator for Bitcoin L2s on Stacks. Finds best price across DEXs and executes swaps with optimal routing.",
   "private": true,
   "scripts": {
     "dev": "npm --prefix frontend run dev",
@@ -13,15 +13,24 @@
     "install:all": "npm install && cd frontend && npm install"
   },
   "keywords": [
-    "bitcoin",
+    "dex",
+    "aggregator",
     "stacks",
-    "routing",
-    "blockchain",
+    "bitcoin",
     "clarity",
-    "smart-contracts"
+    "blockchain",
+    "defi"
   ],
-  "author": "BitRoute Team",
+  "author": "Your Name <your.email@example.com>",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/bitroute.git"
+  },
+  "homepage": "https://github.com/yourusername/bitroute#readme",
+  "bugs": {
+    "url": "https://github.com/yourusername/bitroute/issues"
+  },
   "devDependencies": {
     "@stacks/network": "^6.13.0",
     "@stacks/transactions": "^6.13.0"
@@ -29,9 +38,5 @@
   "engines": {
     "node": ">=18.0.0",
     "npm": ">=9.0.0"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/yourusername/bitroute.git"
   }
 }
