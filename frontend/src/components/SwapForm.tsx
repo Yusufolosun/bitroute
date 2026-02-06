@@ -1,39 +1,3 @@
-    useEffect(() => {
-      const handleKeyPress = (e: KeyboardEvent) => {
-        // Ctrl/Cmd + Enter to execute swap
-        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-          if (isConnected && isFormValid && amountOut) {
-            handleSwap();
-          }
-        }
-        // Escape to clear form
-        if (e.key === 'Escape') {
-          setAmountIn('');
-          setAmountOut('');
-          setRouteInfo(null);
-          setErrorState(null);
-        }
-        // Ctrl/Cmd + R to refresh quote
-        if ((e.ctrlKey || e.metaKey) && e.key === 'r') {
-          e.preventDefault();
-          if (isConnected && tokenIn && tokenOut && amountIn) {
-            handleGetQuote();
-          }
-        }
-      };
-      window.addEventListener('keydown', handleKeyPress);
-      return () => window.removeEventListener('keydown', handleKeyPress);
-    }, [isConnected, isFormValid, amountOut, tokenIn, tokenOut, amountIn]);
-  const calculatePriceImpact = () => {
-    if (!amountIn || !amountOut || !tokenIn || !tokenOut) return 0;
-    const inputValue = parseFloat(amountIn);
-    const outputValue = parseFloat(amountOut);
-    // Simplified calculation (would need actual token prices)
-    const expectedRate = 1.0; // 1:1 for demo
-    const actualRate = outputValue / inputValue;
-    const impact = ((expectedRate - actualRate) / expectedRate) * 100;
-    return Math.abs(impact);
-  };
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -230,6 +194,46 @@ export default function SwapForm() {
   };
 
   const isFormValid = tokenIn && tokenOut && amountIn && parseFloat(amountIn) > 0;
+
+  // Calculate price impact percentage
+  const calculatePriceImpact = () => {
+    if (!amountIn || !amountOut || !tokenIn || !tokenOut) return 0;
+    const inputValue = parseFloat(amountIn);
+    const outputValue = parseFloat(amountOut);
+    // Simplified calculation (would need actual token prices)
+    const expectedRate = 1.0; // 1:1 for demo
+    const actualRate = outputValue / inputValue;
+    const impact = ((expectedRate - actualRate) / expectedRate) * 100;
+    return Math.abs(impact);
+  };
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      // Ctrl/Cmd + Enter to execute swap
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        if (isConnected && isFormValid && amountOut) {
+          handleSwap();
+        }
+      }
+      // Escape to clear form
+      if (e.key === 'Escape') {
+        setAmountIn('');
+        setAmountOut('');
+        setRouteInfo(null);
+        setErrorState(null);
+      }
+      // Ctrl/Cmd + R to refresh quote
+      if ((e.ctrlKey || e.metaKey) && e.key === 'r') {
+        e.preventDefault();
+        if (isConnected && tokenIn && tokenOut && amountIn) {
+          handleGetQuote();
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [isConnected, isFormValid, amountOut, tokenIn, tokenOut, amountIn]);
 
   return (
     <div className="space-y-4">

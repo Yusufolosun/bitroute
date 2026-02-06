@@ -36,7 +36,23 @@ export interface SwapResult {
 }
 
 /**
- * Get best route for a swap (read-only)
+ * Get the best route for a token swap across all integrated DEXs
+ * 
+ * @param tokenIn - Contract principal of input token
+ * @param tokenOut - Contract principal of output token
+ * @param amountIn - Amount to swap (in decimal form, e.g., 100 for 100 STX)
+ * @returns Promise resolving to best route details including quotes from all DEXs
+ * @throws Error if contract call fails or returns invalid data
+ * 
+ * @example
+ * ```typescript
+ * const route = await getBestRoute(
+ *   'ST2NEB...stx-token',
+ *   'ST2NEB...usda-token',
+ *   100
+ * );
+ * console.log(`Best DEX: ${route.bestDex}`);
+ * ```
  */
 export async function getBestRoute(
   tokenIn: string,
@@ -90,7 +106,26 @@ export async function getBestRoute(
 }
 
 /**
- * Execute auto-routed swap (write transaction)
+ * Execute an auto-routed swap transaction on the best available DEX
+ * 
+ * @param userSession - Authenticated user session from Stacks Connect
+ * @param tokenIn - Contract principal of input token
+ * @param tokenOut - Contract principal of output token
+ * @param amountIn - Amount to swap (in decimal form)
+ * @param minAmountOut - Minimum acceptable output (slippage protection)
+ * @returns Promise resolving when transaction is broadcasted
+ * @throws Error if transaction fails or user rejects
+ * 
+ * @example
+ * ```typescript
+ * await executeAutoSwap(
+ *   userSession,
+ *   'ST2NEB...stx-token',
+ *   'ST2NEB...usda-token',
+ *   100,
+ *   95  // 5% slippage tolerance
+ * );
+ * ```
  */
 export async function executeAutoSwap(
   userSession: any,

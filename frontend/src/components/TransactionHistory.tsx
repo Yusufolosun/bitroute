@@ -1,11 +1,10 @@
-
 'use client';
 
 import { useTransaction } from '@/contexts/TransactionContext';
 import { TransactionStatus, Transaction } from '@/types/transaction';
 import { useState } from 'react';
 
-const TransactionHistory = () => {
+export default function TransactionHistory() {
   const { history, clearHistory } = useTransaction();
   const [filter, setFilter] = useState<TransactionStatus | 'all'>('all');
 
@@ -42,10 +41,6 @@ const TransactionHistory = () => {
     alert(`Retry feature: Navigate to swap form and enter:\n${tx.tokenIn} → ${tx.tokenOut}\nAmount: ${tx.amountIn}`);
   };
 
-export default function TransactionHistory() {
-  const { history, clearHistory } = useTransaction();
-  const [filter, setFilter] = useState<TransactionStatus | 'all'>('all');
-
   // Sort by timestamp descending
   const sortedHistory = [...history].sort((a, b) => b.timestamp - a.timestamp);
   // Filter by status
@@ -65,7 +60,6 @@ export default function TransactionHistory() {
     );
   };
 
-  export default TransactionHistory;
   if (history.length === 0) {
     return (
       <div className="mt-8 bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6">
