@@ -1,12 +1,14 @@
 'use client';
 
 import { useState } from 'react';
+import { getTokensForNetwork, DEFAULT_NETWORK } from '@/lib/constants';
 
 export interface Token {
   symbol: string;
   name: string;
   address?: string;
   decimals: number;
+  dex?: string; // Optional DEX identifier
 }
 
 interface TokenSelectorProps {
@@ -16,12 +18,8 @@ interface TokenSelectorProps {
   disabled?: boolean;
 }
 
-// Mock tokens for now (will be from constants later)
-const AVAILABLE_TOKENS: Token[] = [
-  { symbol: 'STX', name: 'Stacks', decimals: 6, address: 'ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.stx-token' },
-  { symbol: 'USDA', name: 'USD Arkadiko', decimals: 6, address: 'ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.usda-token' },
-  { symbol: 'sBTC', name: 'Synthetic Bitcoin', decimals: 8, address: 'ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.sbtc-token' },
-];
+// Load tokens dynamically based on network
+const AVAILABLE_TOKENS: Token[] = getTokensForNetwork(DEFAULT_NETWORK);
 
 export default function TokenSelector({
   selectedToken,
