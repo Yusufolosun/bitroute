@@ -452,11 +452,11 @@ export default function SwapForm() {
             </span>
           </div>
           <div className="flex justify-between items-center text-xs">
-            <span className="text-gray-500 dark:text-gray-500">ALEX Quote:</span>
+            <span className="text-gray-500 dark:text-gray-400">ALEX Quote:</span>
             <span className="text-gray-700 dark:text-gray-300">{routeInfo.alexQuote}</span>
           </div>
           <div className="flex justify-between items-center text-xs">
-            <span className="text-gray-500 dark:text-gray-500">Velar Quote:</span>
+            <span className="text-gray-500 dark:text-gray-400">Velar Quote:</span>
             <span className="text-gray-700 dark:text-gray-300">{routeInfo.velarQuote}</span>
           </div>
           <div className="flex justify-between items-center pt-2 border-t border-blue-200 dark:border-blue-800">
