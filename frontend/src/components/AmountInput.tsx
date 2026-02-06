@@ -18,9 +18,23 @@ export default function AmountInput({
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const input = e.target.value;
-    
-    // Allow only numbers and decimal point
-    if (input === '' || /^\d*\.?\d*$/.test(input)) {
+    // Allow empty
+    if (input === '') {
+      onChange('');
+      return;
+    }
+    // Allow only valid decimal numbers
+    if (/^\d*\.?\d*$/.test(input)) {
+      // Prevent leading zeros (except 0.)
+      if (input.startsWith('0') && input.length > 1 && !input.startsWith('0.')) {
+        onChange(input.substring(1));
+        return;
+      }
+      // Limit decimal places to 6
+      const parts = input.split('.');
+      if (parts[1] && parts[1].length > 6) {
+        return;
+      }
       onChange(input);
     }
   };
@@ -55,6 +69,12 @@ export default function AmountInput({
         className="w-full px-4 py-3 text-2xl font-semibold bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed text-gray-900 dark:text-white placeholder-gray-400"
       />
       
+      {/* Validation feedback */}
+      {value && parseFloat(value) === 0 && (
+        <p className="mt-1 text-xs text-red-500 dark:text-red-400">
+          Amount must be greater than 0
+        </p>
+      )}
       {/* Balance display (mock for now) */}
       {!disabled && (
         <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
