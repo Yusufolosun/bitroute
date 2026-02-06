@@ -1,6 +1,24 @@
-;; Title: BitRoute Router
-;; Description: Auto-routes swaps between ALEX and Velar DEXs
+;; BitRoute Router Contract
+;; 
+;; Description: Auto-routes token swaps across multiple DEXs to find best prices
 ;; Version: 1.0.0
+;; Network: Stacks Testnet
+;; 
+;; Features:
+;; - On-chain price discovery
+;; - Automatic routing to best DEX
+;; - Slippage protection
+;; - Emergency pause mechanism
+;; - Volume tracking
+;; 
+;; Usage:
+;; 1. Call get-best-route (read-only) to get quote
+;; 2. Call execute-auto-swap (public) to execute swap
+;; 
+;; Security:
+;; - Only contract owner can pause
+;; - Slippage protection prevents unfavorable trades
+;; - All state changes are atomic
 
 ;; Error constants
 (define-constant ERR-NOT-AUTHORIZED (err u100))
@@ -9,6 +27,10 @@
 (define-constant ERR-CONTRACT-PAUSED (err u103))
 (define-constant ERR-DEX-CALL-FAILED (err u104))
 
+;; -----------------------------------
+;; Configuration Constants
+;; -----------------------------------
+
 ;; DEX identifier constants
 (define-constant DEX-ALEX u1)
 (define-constant DEX-VELAR u2)
@@ -16,21 +38,34 @@
 ;; Contract owner constant
 (define-constant CONTRACT-OWNER tx-sender)
 
-;; State variables
+;; -----------------------------------
+;; State Variables
+;; -----------------------------------
+
+;; Emergency pause flag for halting all operations
 (define-data-var contract-paused bool false)
 
-;; Data maps
+;; -----------------------------------
+;; Data Maps
+;; -----------------------------------
+
+;; Track total volume per DEX (aggregated swap amounts)
 (define-map dex-volume
   { dex-id: uint }
   { total-volume: uint }
 )
 
+;; Track user activity (swap count and total volume)
 (define-map user-swaps
   { user: principal }
   { swap-count: uint, total-volume: uint }
 )
 
-;; Trait definitions
+;; -----------------------------------
+;; Trait Definitions
+;; -----------------------------------
+
+;; Fungible token trait for SIP-010 standard
 (define-trait ft-trait
   (
     (transfer (uint principal principal (optional (buff 34))) (response bool uint))
@@ -39,10 +74,20 @@
   )
 )
 
-;; Read-only functions
+;; -----------------------------------
+;; Read-Only Functions
+;; -----------------------------------
 
-;; Returns best DEX and expected output for a given swap
-;; TODO: Replace mock quotes with actual DEX contract-calls
+;; get-best-route
+;; 
+;; Description: Compares quotes from ALEX and Velar DEXs to determine optimal routing
+;; Parameters:
+;;   - token-in: Contract address of input token
+;;   - token-out: Contract address of output token
+;;   - amount-in: Amount of input tokens (in smallest units)
+;; Returns: Response with best DEX identifier, expected output, and all quotes
+;; 
+;; TODO: Replace mock quotes with actual DEX contract-calls via trait invocation
 (define-read-only (get-best-route (token-in principal) (token-out principal) (amount-in uint))
   (let
     (
@@ -58,10 +103,30 @@
   )
 )
 
-;; Public functions
+;; -----------------------------------
+;; Public Functions
+;; -----------------------------------
 
-;; Main swap function - auto-routes to best DEX
-;; TODO: Add actual token transfers and DEX integrations
+;; execute-auto-swap
+;; 
+;; Description: Executes token swap by auto-routing to the DEX with best price
+;; Parameters:
+;;   - token-in: Input token contract (must implement ft-trait)
+;;   - token-out: Output token contract (must implement ft-trait)
+;;   - amount-in: Amount of input tokens to swap (must be > 0)
+;;   - min-amount-out: Minimum acceptable output (slippage protection)
+;; Returns: Response with DEX used and actual output amount
+;; Errors:
+;;   - ERR-CONTRACT-PAUSED: Contract is in emergency pause state
+;;   - ERR-INVALID-AMOUNT: amount-in is zero or invalid
+;;   - ERR-SLIPPAGE-TOO-HIGH: Output below min-amount-out threshold
+;;   - ERR-DEX-CALL-FAILED: Failed to get route from DEXs
+;; 
+;; Side Effects:
+;;   - Updates dex-volume map with aggregated volume per DEX
+;;   - Updates user-swaps map with user activity tracking
+;; 
+;; TODO: Add actual token transfers and DEX integrations via contract-call
 (define-public (execute-auto-swap
     (token-in <ft-trait>)
     (token-out <ft-trait>)
@@ -84,16 +149,16 @@
         (current-user-swaps (default-to { swap-count: u0, total-volume: u0 } (map-get? user-swaps { user: tx-sender })))
       )
       
-      ;; Step 5: Validate slippage protection
+      ;; Validate slippage protection (prevent unfavorable trades)
       (asserts! (>= amount-out min-amount-out) ERR-SLIPPAGE-TOO-HIGH)
       
-      ;; Step 6: Update dex-volume
+      ;; Update dex-volume tracking (aggregate volume per DEX)
       (map-set dex-volume
         { dex-id: best-dex }
         { total-volume: (+ (get total-volume current-dex-volume) amount-in) }
       )
       
-      ;; Step 7: Update user-swaps
+      ;; Update user-swaps tracking (user activity metrics)
       (map-set user-swaps
         { user: tx-sender }
         { 
@@ -102,7 +167,7 @@
         }
       )
       
-      ;; Step 8: Return result
+      ;; Return swap result with DEX identifier and output amount
       (ok {
         dex-used: best-dex,
         amount-out: amount-out
@@ -111,27 +176,47 @@
   )
 )
 
-;; === ADMIN FUNCTIONS ===
+;; -----------------------------------
+;; Admin Functions
+;; -----------------------------------
 
-;; Emergency circuit breaker - only contract owner can pause
+;; set-paused
+;; 
+;; Description: Emergency circuit breaker to halt all swap operations
+;; Parameters:
+;;   - paused: true to pause, false to unpause
+;; Authorization: Only CONTRACT-OWNER can invoke
+;; Returns: Response with success boolean
+;; Errors:
+;;   - ERR-NOT-AUTHORIZED: Caller is not contract owner
 (define-public (set-paused (paused bool))
   (begin
     ;; Only contract owner can pause
     (asserts! (is-eq tx-sender CONTRACT-OWNER) ERR-NOT-AUTHORIZED)
     
-    ;; Update state
+    ;; Update pause state variable
     (ok (var-set contract-paused paused))
   )
 )
 
-;; === READ-ONLY HELPERS ===
+;; -----------------------------------
+;; Read-Only Helpers
+;; -----------------------------------
 
-;; Check if contract is paused
+;; is-paused
+;; 
+;; Description: Check if contract is in emergency pause state
+;; Returns: Response with boolean pause status
 (define-read-only (is-paused)
   (ok (var-get contract-paused))
 )
 
-;; Query total volume for a specific DEX
+;; get-dex-volume
+;; 
+;; Description: Query cumulative volume for a specific DEX
+;; Parameters:
+;;   - dex-id: DEX identifier (DEX-ALEX = 1, DEX-VELAR = 2)
+;; Returns: Response with total volume in smallest token units
 (define-read-only (get-dex-volume (dex-id uint))
   (ok 
     (get total-volume 
@@ -143,7 +228,12 @@
   )
 )
 
-;; Query user's swap history and statistics
+;; get-user-stats
+;; 
+;; Description: Query user's swap activity history and statistics
+;; Parameters:
+;;   - user: Principal address of the user
+;; Returns: Response with swap count and total volume
 (define-read-only (get-user-stats (user principal))
   (ok 
     (default-to 
