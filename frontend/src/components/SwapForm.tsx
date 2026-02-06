@@ -358,6 +358,12 @@ export default function SwapForm() {
           </div>
         </div>
       )}
+      <button
+        onClick={handleGetQuote}
+        className="mt-2 px-3 py-1 bg-orange-100 dark:bg-orange-900 text-orange-700 dark:text-orange-300 rounded text-xs font-medium hover:bg-orange-200 dark:hover:bg-orange-800 transition"
+      >
+        Refresh Quote
+      </button>
     </div>
   );
 }
