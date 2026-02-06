@@ -466,9 +466,13 @@ export default function SwapForm() {
           </div>
           <div className="flex justify-between items-center">
             <span className="text-sm text-gray-600 dark:text-gray-400">Best Route</span>
-            <span className="font-semibold text-orange-600 dark:text-orange-400">
+            <div className={`px-3 py-1 rounded-full text-xs font-semibold ${
+              routeInfo.dexName === 'ALEX' 
+                ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200'
+                : 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
+            }`}>
               {routeInfo.dexName}
-            </span>
+            </div>
           </div>
           <div className="flex justify-between items-center text-xs">
             <span className="text-gray-500 dark:text-gray-400">ALEX Quote:</span>
