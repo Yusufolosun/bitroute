@@ -1,3 +1,27 @@
+    const exportToCSV = () => {
+      const csvContent = [
+        ['Timestamp', 'Type', 'Token In', 'Token Out', 'Amount In', 'Amount Out', 'DEX', 'Status', 'TX ID'],
+        ...history.map(tx => [
+          new Date(tx.timestamp).toISOString(),
+          tx.type,
+          tx.tokenIn,
+          tx.tokenOut,
+          tx.amountIn,
+          tx.amountOut,
+          tx.dex,
+          tx.status,
+          tx.txId,
+        ])
+      ].map(row => row.join(',')).join('\n');
+
+      const blob = new Blob([csvContent], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `bitroute-history-${Date.now()}.csv`;
+      a.click();
+      window.URL.revokeObjectURL(url);
+    };
   const handleRetry = (tx: any) => {
     // Populate swap form with failed transaction details
     console.log('🔄 Retrying transaction:', tx);
@@ -56,12 +80,20 @@ export default function TransactionHistory() {
     <div className="mt-8 bg-white dark:bg-gray-900 rounded-xl shadow p-4">
       <div className="flex justify-between items-center mb-2">
         <span className="font-semibold text-gray-900 dark:text-white">Recent Transactions</span>
-        <button
-          onClick={clearHistory}
-          className="text-xs text-gray-400 hover:text-red-500 dark:hover:text-red-300"
-        >
-          Clear
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={exportToCSV}
+            className="text-sm text-orange-600 dark:text-orange-400 hover:underline"
+          >
+            Export CSV
+          </button>
+          <button
+            onClick={clearHistory}
+            className="text-xs text-gray-400 hover:text-red-500 dark:hover:text-red-300"
+          >
+            Clear
+          </button>
+        </div>
       </div>
       <div className="flex gap-2 mb-4">
         <button
