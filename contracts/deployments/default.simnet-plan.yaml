@@ -46,6 +46,6 @@ plan:
         - emulated-contract-publish:
             contract-name: router
             emulated-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
-            path: "contracts\\router.clar"
+            path: contracts/router.clar
             clarity-version: 4
       epoch: "3.3"
