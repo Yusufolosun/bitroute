@@ -35,9 +35,9 @@ export default function SwapForm() {
   const handleGetQuote = async () => {
     if (!tokenIn || !tokenOut || !amountIn) return;
     
-    // Build token addresses (mock for now - will need actual deployed addresses)
-    const tokenInAddress = tokenIn.address || `${CONTRACT_ADDRESS[DEFAULT_NETWORK]}.${tokenIn.symbol.toLowerCase()}`;
-    const tokenOutAddress = tokenOut.address || `${CONTRACT_ADDRESS[DEFAULT_NETWORK]}.${tokenOut.symbol.toLowerCase()}`;
+    // Use token addresses directly (all tokens now have valid contract addresses)
+    const tokenInAddress = tokenIn.address!;
+    const tokenOutAddress = tokenOut.address!;
     
     const quote = await getQuote(
       tokenInAddress,
@@ -66,8 +66,9 @@ export default function SwapForm() {
     // Calculate minimum amount out based on slippage
     const minOut = parseFloat(amountOut) * (1 - parseFloat(slippage) / 100);
     
-    const tokenInAddress = tokenIn.address || `${CONTRACT_ADDRESS[DEFAULT_NETWORK]}.${tokenIn.symbol.toLowerCase()}`;
-    const tokenOutAddress = tokenOut.address || `${CONTRACT_ADDRESS[DEFAULT_NETWORK]}.${tokenOut.symbol.toLowerCase()}`;
+    // Use token addresses directly (all tokens now have valid contract addresses)
+    const tokenInAddress = tokenIn.address!;
+    const tokenOutAddress = tokenOut.address!;
 
     await swap(
       tokenInAddress,

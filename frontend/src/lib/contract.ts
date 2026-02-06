@@ -67,15 +67,21 @@ export async function getBestRoute(
     const parsed = parseClarityValue(result);
     console.log('✅ Parsed result:', parsed);
     
-    if (parsed.success && parsed.value) {
+    if (parsed.success && parsed.value && parsed.value.value) {
+      // The contract returns a response with nested tuple
+      const tupleData = parsed.value.value;
+      console.log('📋 Tuple data:', tupleData);
+      
       return {
-        bestDex: Number(parsed.value['best-dex'].value),
-        expectedAmountOut: BigInt(parsed.value['expected-amount-out'].value),
-        alexQuote: BigInt(parsed.value['alex-quote'].value),
-        velarQuote: BigInt(parsed.value['velar-quote'].value),
+        bestDex: Number(tupleData['best-dex']?.value || 1),
+        expectedAmountOut: BigInt(tupleData['expected-amount-out']?.value || 0),
+        alexQuote: BigInt(tupleData['alex-quote']?.value || 0),
+        velarQuote: BigInt(tupleData['velar-quote']?.value || 0),
       };
     }
     
+    // Log the error response for debugging
+    console.error('❌ Contract call failed:', parsed);
     throw new Error('Failed to get route: ' + JSON.stringify(parsed));
   } catch (error) {
     console.error('❌ Error getting best route:', error);

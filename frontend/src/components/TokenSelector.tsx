@@ -18,9 +18,9 @@ interface TokenSelectorProps {
 
 // Mock tokens for now (will be from constants later)
 const AVAILABLE_TOKENS: Token[] = [
-  { symbol: 'STX', name: 'Stacks', decimals: 6 },
-  { symbol: 'USDA', name: 'USD Arkadiko', decimals: 6, address: 'mock.usda' },
-  { symbol: 'sBTC', name: 'Synthetic Bitcoin', decimals: 8, address: 'mock.sbtc' },
+  { symbol: 'STX', name: 'Stacks', decimals: 6, address: 'ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.stx-token' },
+  { symbol: 'USDA', name: 'USD Arkadiko', decimals: 6, address: 'ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.usda-token' },
+  { symbol: 'sBTC', name: 'Synthetic Bitcoin', decimals: 8, address: 'ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.sbtc-token' },
 ];
 
 export default function TokenSelector({

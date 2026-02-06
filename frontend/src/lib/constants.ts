@@ -4,14 +4,14 @@ import { StacksMainnet, StacksTestnet, StacksMocknet } from '@stacks/network';
 export const NETWORKS = {
   mainnet: new StacksMainnet(),
   testnet: new StacksTestnet(),
-  devnet: new StacksMocknet(),
+  devnet: new StacksMocknet({ url: 'http://localhost:20444' }), // Custom devnet port
 } as const;
 
 // Contract deployment addresses (update after deployment)
 export const CONTRACT_ADDRESS = {
   devnet: 'ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM',
-  testnet: '', // TODO: Add after testnet deployment
-  mainnet: '', // TODO: Add after mainnet deployment
+  testnet: 'ST2NEB84ASENDXKYGJPQW86YXQCEFEX2ZQPG87ND', // ✅ YOUR DEPLOYED ADDRESS
+  mainnet: '',
 } as const;
 
 export const CONTRACT_NAME = 'router';

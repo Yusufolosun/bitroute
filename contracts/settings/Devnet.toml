@@ -45,3 +45,17 @@ sbtc_balance = 1_000_000_000
 [devnet]
 disable_stacks_explorer = false
 disable_stacks_api = false
+
+# Custom ports to avoid conflicts
+[devnet.postgres]
+port = 5433  # Changed from default 5432
+
+[devnet.stacks_api]
+port = 3001  # Changed from default 3999
+
+[devnet.stacks_node]
+rpc_port = 20444  # Changed from default 20443
+
+[devnet.bitcoin_node]
+rpc_port = 18444  # Changed from default 18443
+p2p_port = 18445  # Changed from default 18444

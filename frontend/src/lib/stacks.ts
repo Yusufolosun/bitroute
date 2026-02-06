@@ -87,5 +87,6 @@ export function toUintCV(value: number | bigint): ReturnType<typeof uintCV> {
  * @returns Principal Clarity value
  */
 export function toPrincipalCV(address: string): ReturnType<typeof principalCV> {
+  console.log('🏗️ Creating principal CV for address:', address, 'length:', address.length);
   return principalCV(address);
 }
