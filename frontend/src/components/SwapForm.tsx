@@ -354,12 +354,12 @@ export default function SwapForm() {
             </label>
             <span className="text-xs text-gray-400 dark:text-gray-500">Max price movement</span>
           </div>
-          <div className="flex gap-2 mb-2">
+          <div className="flex flex-wrap gap-2">
             {['0.1', '0.5', '1.0'].map((val) => (
               <button
                 key={val}
                 onClick={() => setSlippage(val)}
-                className={`flex-1 px-4 py-2.5 rounded-lg font-medium transition-all ${
+                className={`flex-1 min-w-[70px] px-4 py-2.5 rounded-lg font-medium transition-all ${
                   slippage === val
                     ? 'bg-orange-500 text-white shadow-md scale-105'
                     : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700'
@@ -377,7 +377,7 @@ export default function SwapForm() {
                   setSlippage(val);
                 }
               }}
-              className="w-24 px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-gray-900 dark:text-white text-center"
+              className="flex-1 min-w-[90px] px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-gray-900 dark:text-white text-center"
               placeholder="Custom"
             />
           </div>
