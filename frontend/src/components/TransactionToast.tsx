@@ -25,21 +25,24 @@ export default function TransactionToast() {
           bg: 'bg-blue-500',
           icon: '⏳',
           title: 'Transaction Pending',
-          message: 'Waiting for confirmation...',
+          message: 'Waiting for blockchain confirmation...',
+          showSpinner: true,
         };
       case TransactionStatus.SUCCESS:
         return {
           bg: 'bg-green-500',
           icon: '✅',
-          title: 'Swap Successful',
-          message: 'Your tokens have been swapped',
+          title: 'Swap Successful!',
+          message: `${current.tokenIn} → ${current.tokenOut} completed`,
+          showSpinner: false,
         };
       case TransactionStatus.FAILED:
         return {
           bg: 'bg-red-500',
           icon: '❌',
           title: 'Transaction Failed',
-          message: current.error || 'Something went wrong',
+          message: current.error || 'Please try again',
+          showSpinner: false,
         };
       default:
         return null;
@@ -55,7 +58,14 @@ export default function TransactionToast() {
         <span className="text-2xl">{config.icon}</span>
         <div className="flex-1">
           <div className="font-bold text-base">{config.title}</div>
-          <div className="text-sm opacity-90">{config.message}</div>
+          <p className="text-sm opacity-90 mb-2">
+            {current.status === TransactionStatus.SUCCESS && (
+              <span className="font-semibold">
+                {current.amountIn} {current.tokenIn} → {current.amountOut} {current.tokenOut}
+              </span>
+            )}
+            {config.message}
+          </p>
           {current.txId && (
             <a
               href={`https://explorer.hiro.so/txid/${current.txId}?chain=testnet`}
@@ -67,7 +77,7 @@ export default function TransactionToast() {
             </a>
           )}
         </div>
-        {current.status === TransactionStatus.PENDING && (
+        {config.showSpinner && (
           <span className="ml-2 animate-spin">🔄</span>
         )}
       </div>
