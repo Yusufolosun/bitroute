@@ -44,6 +44,72 @@ export const MOCK_TOKENS = {
   },
 } as const;
 
+// Real Stacks Mainnet Token Addresses
+export const MAINNET_TOKENS = {
+  // Wrapped STX (ALEX)
+  WSTX_ALEX: {
+    symbol: 'wSTX',
+    name: 'Wrapped STX (ALEX)',
+    decimals: 6,
+    address: 'SP3K8BC0PPEVCV7NZ6QSRWPQ2JE9E5B6N3PA0KBR9.token-wstx',
+    dex: 'ALEX',
+  },
+  
+  // Wrapped STX (Velar)
+  WSTX_VELAR: {
+    symbol: 'wSTX',
+    name: 'Wrapped STX (Velar)',
+    decimals: 6,
+    address: 'SP1Y5YSTAHZ88XYK1VPDH24GY0HPX5J4JECTMY4A1.wstx',
+    dex: 'Velar',
+  },
+  
+  // USDA
+  USDA: {
+    symbol: 'USDA',
+    name: 'USD Arkadiko',
+    decimals: 6,
+    address: 'SP2C2YFP12AJZB4MABJBAJ55XECVS7E4PMMZ89YZR.usda-token',
+  },
+  
+  // ALEX Token
+  ALEX: {
+    symbol: 'ALEX',
+    name: 'ALEX Token',
+    decimals: 8,
+    address: 'SP3K8BC0PPEVCV7NZ6QSRWPQ2JE9E5B6N3PA0KBR9.age000-governance-token',
+  },
+  
+  // Velar Token
+  VELAR: {
+    symbol: 'VELAR',
+    name: 'Velar Token',
+    decimals: 6,
+    address: 'SP1Y5YSTAHZ88XYK1VPDH24GY0HPX5J4JECTMY4A1.velar-token',
+  },
+  
+  // sBTC (wrapped Bitcoin)
+  SBTC: {
+    symbol: 'sBTC',
+    name: 'Synthetic Bitcoin',
+    decimals: 8,
+    address: 'SP3K8BC0PPEVCV7NZ6QSRWPQ2JE9E5B6N3PA0KBR9.token-wbtc',
+  },
+} as const;
+
+// Network-specific token lists
+export const getTokensForNetwork = (network: 'mainnet' | 'testnet' | 'devnet') => {
+  switch (network) {
+    case 'mainnet':
+      return Object.values(MAINNET_TOKENS);
+    case 'testnet':
+      // Use mainnet addresses for testnet (they work cross-network)
+      return Object.values(MAINNET_TOKENS);
+    default:
+      return Object.values(MOCK_TOKENS);  // Keep mock for devnet
+  }
+};
+
 // DEX identifiers (must match contract)
 export const DEX = {
   ALEX: 1,
