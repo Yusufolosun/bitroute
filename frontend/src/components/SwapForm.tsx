@@ -1,3 +1,29 @@
+    useEffect(() => {
+      const handleKeyPress = (e: KeyboardEvent) => {
+        // Ctrl/Cmd + Enter to execute swap
+        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+          if (isConnected && isFormValid && amountOut) {
+            handleSwap();
+          }
+        }
+        // Escape to clear form
+        if (e.key === 'Escape') {
+          setAmountIn('');
+          setAmountOut('');
+          setRouteInfo(null);
+          setErrorState(null);
+        }
+        // Ctrl/Cmd + R to refresh quote
+        if ((e.ctrlKey || e.metaKey) && e.key === 'r') {
+          e.preventDefault();
+          if (isConnected && tokenIn && tokenOut && amountIn) {
+            handleGetQuote();
+          }
+        }
+      };
+      window.addEventListener('keydown', handleKeyPress);
+      return () => window.removeEventListener('keydown', handleKeyPress);
+    }, [isConnected, isFormValid, amountOut, tokenIn, tokenOut, amountIn]);
   const calculatePriceImpact = () => {
     if (!amountIn || !amountOut || !tokenIn || !tokenOut) return 0;
     const inputValue = parseFloat(amountIn);
@@ -257,6 +283,11 @@ export default function SwapForm() {
         }
         return null;
       })()}
+
+      {/* Keyboard Shortcuts Hint */}
+      <div className="mt-4 text-xs text-center text-gray-400 dark:text-gray-500">
+        💡 Shortcuts: Ctrl+Enter (Swap) • Ctrl+R (Refresh) • Esc (Clear)
+      </div>
 
       {/* Token In */}
       <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4">
