@@ -3,6 +3,15 @@
 import { useTransaction } from '@/contexts/TransactionContext';
 import { TransactionStatus } from '@/types/transaction';
 import { useEffect, useState } from 'react';
+  const [copied, setCopied] = useState(false);
+
+  const copyTxId = () => {
+    if (current?.txId) {
+      navigator.clipboard.writeText(current.txId);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
 
 export default function TransactionToast() {
   const { current } = useTransaction();
@@ -67,14 +76,22 @@ export default function TransactionToast() {
             {config.message}
           </p>
           {current.txId && (
-            <a
-              href={`https://explorer.hiro.so/txid/${current.txId}?chain=testnet`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-xs underline opacity-75 hover:opacity-100"
-            >
-              View on Explorer →
-            </a>
+            <div className="flex gap-2 items-center">
+              <a
+                href={`https://explorer.hiro.so/txid/${current.txId}?chain=testnet`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs underline opacity-75 hover:opacity-100 flex-1"
+              >
+                View on Explorer →
+              </a>
+              <button
+                onClick={copyTxId}
+                className="text-xs px-2 py-1 bg-white/20 rounded hover:bg-white/30 transition-colors"
+              >
+                {copied ? '✓ Copied' : 'Copy ID'}
+              </button>
+            </div>
           )}
         </div>
         {config.showSpinner && (
