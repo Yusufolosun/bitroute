@@ -155,10 +155,18 @@ export default function SwapForm() {
     <div className="space-y-4">
       {/* Error Display */}
       {error && (
-        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4">
-          <p className="text-sm text-red-600 dark:text-red-400">
-            ⚠️ {error}
-          </p>
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4 flex items-start gap-3">
+          <span className="text-2xl">⚠️</span>
+          <div className="flex-1">
+            <div className="font-bold text-red-700 dark:text-red-300 mb-1">Transaction Error</div>
+            <div className="text-sm text-red-600 dark:text-red-400">{error}</div>
+          </div>
+          <button
+            onClick={() => setError(null)}
+            className="text-red-400 hover:text-red-600 dark:hover:text-red-200 ml-2 text-lg"
+          >
+            ✕
+          </button>
         </div>
       )}
 
