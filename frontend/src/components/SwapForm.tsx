@@ -260,18 +260,21 @@ export default function SwapForm() {
       {/* Slippage Settings */}
       {isConnected && (
         <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Slippage Tolerance
-          </label>
-          <div className="flex gap-2">
+          <div className="flex items-center justify-between mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              Slippage Tolerance
+            </label>
+            <span className="text-xs text-gray-400 dark:text-gray-500">Max price movement</span>
+          </div>
+          <div className="flex gap-2 mb-2">
             {['0.1', '0.5', '1.0'].map((val) => (
               <button
                 key={val}
                 onClick={() => setSlippage(val)}
-                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                className={`flex-1 px-4 py-2.5 rounded-lg font-medium transition-all ${
                   slippage === val
-                    ? 'bg-orange-500 text-white'
-                    : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                    ? 'bg-orange-500 text-white shadow-md scale-105'
+                    : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700'
                 }`}
               >
                 {val}%
@@ -286,10 +289,15 @@ export default function SwapForm() {
                   setSlippage(val);
                 }
               }}
-              className="flex-1 px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-gray-900 dark:text-white"
+              className="w-24 px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-gray-900 dark:text-white text-center"
               placeholder="Custom"
             />
           </div>
+          {parseFloat(slippage) > 2 && (
+            <div className="text-xs text-orange-600 dark:text-orange-400 mt-1">
+              ⚠️ High slippage may result in unfavorable rates
+            </div>
+          )}
         </div>
       )}
 
