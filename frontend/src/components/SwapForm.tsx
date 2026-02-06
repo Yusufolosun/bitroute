@@ -28,6 +28,7 @@ export default function SwapForm() {
   } | null>(null);
   const [txId, setTxId] = useState<string | null>(null);
   const [errorState, setErrorState] = useState<string | null>(null);
+  const [isPending, setIsPending] = useState(false);
 
   const handleSwapTokens = () => {
     setTokenIn(tokenOut);
@@ -87,6 +88,8 @@ export default function SwapForm() {
       dex: routeInfo?.dexName || 'Unknown',
     });
 
+    setIsPending(true);
+
     await swap(
       tokenInAddress,
       tokenOutAddress,
@@ -105,6 +108,8 @@ export default function SwapForm() {
           dex: routeInfo?.dexName || 'Unknown',
         });
         
+        setIsPending(false);
+        
         // Monitor transaction status
         checkTransactionStatus(txId);
         
@@ -114,6 +119,7 @@ export default function SwapForm() {
         setRouteInfo(null);
       },
       (error) => {
+        setIsPending(false);
         updateTransactionStatus(tempTxId, TransactionStatus.FAILED, error);
         setErrorState(error);
       }
@@ -299,7 +305,7 @@ export default function SwapForm() {
         {/* Swap Button */}
         <button
           onClick={handleSwap}
-          disabled={!isConnected || !isFormValid || !amountOut || isLoading}
+          disabled={!isConnected || !isFormValid || !amountOut || isLoading || isPending}
           className="w-full py-4 bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-xl transition-colors shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
         >
           {isLoading ? (
