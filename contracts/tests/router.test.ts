@@ -6,11 +6,11 @@ const deployer = accounts.get("deployer")!;
 const wallet1 = accounts.get("wallet_1")!;
 
 describe("BitRoute Router Contract", () => {
-  
+
   beforeEach(() => {
     // Reset simnet state before each test
   });
-  
+
   it("ensures contract initializes correctly", () => {
     const isPaused = simnet.callReadOnlyFn(
       "router",
@@ -18,7 +18,7 @@ describe("BitRoute Router Contract", () => {
       [],
       deployer
     );
-    expect(isPaused.result).toBeOk(Cl.bool(false));
+    expect(isPaused.result).toEqual(Cl.ok(Cl.bool(false)));
   });
 
   it("rejects zero amount swaps", () => {
@@ -26,15 +26,15 @@ describe("BitRoute Router Contract", () => {
       "router",
       "execute-auto-swap",
       [
-        Cl.contractPrincipal(deployer, "mock-token-a"),
-        Cl.contractPrincipal(deployer, "mock-token-b"),
+        Cl.contractPrincipal(deployer, "mock-token"),
+        Cl.contractPrincipal(deployer, "router"),
         Cl.uint(0), // Invalid zero amount
         Cl.uint(0),
       ],
       deployer
     );
-    
-    expect(response.result).toBeErr(Cl.uint(102)); // ERR-INVALID-AMOUNT
+
+    expect(response.result).toEqual(Cl.error(Cl.uint(102))); // ERR-INVALID-AMOUNT
   });
 
   it("allows owner to pause contract", () => {
@@ -44,18 +44,18 @@ describe("BitRoute Router Contract", () => {
       [Cl.bool(true)],
       deployer
     );
-    
-    expect(pauseResponse.result).toBeOk(Cl.bool(true));
-    
+
+    expect(pauseResponse.result).toEqual(Cl.ok(Cl.bool(true)));
+
     const isPaused = simnet.callReadOnlyFn(
       "router",
       "is-paused",
       [],
       deployer
     );
-    
-    expect(isPaused.result).toBeOk(Cl.bool(true));
-    
+
+    expect(isPaused.result).toEqual(Cl.ok(Cl.bool(true)));
+
     // Unpause for other tests
     simnet.callPublicFn("router", "set-paused", [Cl.bool(false)], deployer);
   });
@@ -67,8 +67,8 @@ describe("BitRoute Router Contract", () => {
       [Cl.bool(true)],
       wallet1 // Non-owner
     );
-    
-    expect(response.result).toBeErr(Cl.uint(100)); // ERR-NOT-AUTHORIZED
+
+    expect(response.result).toEqual(Cl.error(Cl.uint(100))); // ERR-NOT-AUTHORIZED
   });
 
   it("returns price quotes from get-best-route", () => {
@@ -76,21 +76,21 @@ describe("BitRoute Router Contract", () => {
       "router",
       "get-best-route",
       [
-        Cl.principal(deployer + ".mock-token-a"),
-        Cl.principal(deployer + ".mock-token-b"),
+        Cl.principal(deployer + ".mock-token"),
+        Cl.principal(deployer + ".router"),
         Cl.uint(1000),
       ],
       deployer
     );
-    
-    expect(response.result).toBeOk(
+
+    expect(response.result).toEqual(Cl.ok(
       Cl.tuple({
         "best-dex": Cl.uint(1),
         "expected-amount-out": Cl.uint(1000),
         "alex-quote": Cl.uint(1000),
         "velar-quote": Cl.uint(950),
       })
-    );
+    ));
   });
 
   it("tracks DEX volume correctly", () => {
@@ -100,9 +100,9 @@ describe("BitRoute Router Contract", () => {
       [Cl.uint(1)],
       deployer
     );
-    
-    expect(volumeBefore.result).toBeOk(Cl.uint(0));
-    
+
+    expect(volumeBefore.result).toEqual(Cl.ok(Cl.uint(0)));
+
     // Volume tracking will be tested after actual swaps are implemented
   });
 });
