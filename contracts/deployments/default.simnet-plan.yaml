@@ -44,6 +44,11 @@ plan:
     - id: 0
       transactions:
         - emulated-contract-publish:
+            contract-name: mock-token
+            emulated-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
+            path: contracts/mock-token.clar
+            clarity-version: 4
+        - emulated-contract-publish:
             contract-name: router
             emulated-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
             path: contracts/router.clar
