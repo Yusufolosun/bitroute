@@ -4,7 +4,19 @@ import { Inter } from "next/font/google";
 import { WalletProvider } from "@/contexts/WalletContext";
 import { TransactionProvider } from "@/contexts/TransactionContext";
 import ErrorBoundary from "@/components/ErrorBoundary";
+import ClientInitialization from "@/components/ClientInitialization";
+import { validateEnv } from '@/lib/env';
+import Script from 'next/script';
+import { GA_TRACKING_ID } from '@/lib/analytics';
+import { reportWebVitals } from '@/lib/performance';
 import "./globals.css";
+
+// Validate environment on backend start
+if (typeof window === 'undefined') {
+  validateEnv();
+}
+
+export { reportWebVitals };
 
 const inter = Inter({
   subsets: ["latin"],
@@ -44,6 +56,29 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <ClientInitialization />
+        {/* Google Analytics */}
+        {GA_TRACKING_ID && (
+          <>
+            <Script
+              src={`https://www.googletagmanager.com/gtag/js?id=${GA_TRACKING_ID}`}
+              strategy="afterInteractive"
+            />
+            <Script id="google-analytics" strategy="afterInteractive">
+              {`
+                window.dataLayer = window.dataLayer || [];
+                function gtag(){dataLayer.push(arguments);}
+                gtag('js', new Date());
+                gtag('config', '${GA_TRACKING_ID}', {
+                  page_path: window.location.pathname,
+                  anonymize_ip: true,
+                });
+              `}
+            </Script>
+          </>
+        )}
+      </head >
       <body className={inter.className}>
         <ErrorBoundary>
           <WalletProvider>
@@ -53,6 +88,6 @@ export default function RootLayout({
           </WalletProvider>
         </ErrorBoundary>
       </body>
-    </html>
+    </html >
   );
 }

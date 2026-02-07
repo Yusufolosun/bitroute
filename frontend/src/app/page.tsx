@@ -4,8 +4,15 @@ import { useState, useEffect } from 'react';
 import WalletConnect from '@/components/WalletConnect';
 import SwapForm from '@/components/SwapForm';
 import TransactionToast from '@/components/TransactionToast';
-import TransactionHistory from '@/components/TransactionHistory';
 import NetworkStatus from '@/components/NetworkStatus';
+import LegalDisclaimer from '@/components/LegalDisclaimer';
+import Footer from '@/components/Footer';
+import dynamic from 'next/dynamic';
+
+const TransactionHistory = dynamic(() => import('@/components/TransactionHistory'), {
+  loading: () => <div className="mt-8 animate-pulse bg-gray-200 dark:bg-gray-700 h-40 rounded-xl" />,
+  ssr: false,
+});
 
 export default function Home() {
   const [mounted, setMounted] = useState(false);
@@ -26,7 +33,8 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 flex flex-col">
+      <LegalDisclaimer />
       {/* Header */}
       <header className="border-b border-gray-200 dark:border-gray-700 bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
@@ -75,7 +83,7 @@ export default function Home() {
               Automatically routes through ALEX or Velar for optimal execution
             </p>
           </div>
-          
+
           <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-md">
             <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
               ⚡ Fast Execution
@@ -84,7 +92,7 @@ export default function Home() {
               Powered by Stacks Nakamoto upgrade with 5-second blocks
             </p>
           </div>
-          
+
           <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-md">
             <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
               🔒 Secure
@@ -96,14 +104,7 @@ export default function Home() {
         </div>
       </main>
 
-      {/* Footer */}
-      <footer className="mt-auto py-6 border-t border-gray-200 dark:border-gray-700">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <p className="text-center text-sm text-gray-600 dark:text-gray-400">
-            BitRoute - Built on Stacks • Secured by Bitcoin
-          </p>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }
