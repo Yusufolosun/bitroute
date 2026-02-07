@@ -1,0 +1,73 @@
+{
+    "dashboard": {
+        "title": "BitRoute Production Metrics",
+        "tags": [
+            "bitroute",
+            "stacks",
+            "dex"
+        ],
+        "timezone": "browser",
+        "panels": [
+            {
+                "id": 1,
+                "title": "Total Swaps (24h)",
+                "type": "stat",
+                "targets": [
+                    {
+                        "query": "sum(rate(bitroute_swaps_total[24h]))"
+                    }
+                ]
+            },
+            {
+                "id": 2,
+                "title": "Swap Success Rate",
+                "type": "gauge",
+                "targets": [
+                    {
+                        "query": "rate(bitroute_swaps_success[5m]) / rate(bitroute_swaps_total[5m])"
+                    }
+                ]
+            },
+            {
+                "id": 3,
+                "title": "DEX Distribution",
+                "type": "pie",
+                "targets": [
+                    {
+                        "query": "sum by (dex) (bitroute_swaps_total)"
+                    }
+                ]
+            },
+            {
+                "id": 4,
+                "title": "Average Swap Size (STX)",
+                "type": "graph",
+                "targets": [
+                    {
+                        "query": "avg(bitroute_swap_amount_stx)"
+                    }
+                ]
+            },
+            {
+                "id": 5,
+                "title": "Error Rate",
+                "type": "graph",
+                "targets": [
+                    {
+                        "query": "rate(bitroute_errors_total[5m])"
+                    }
+                ]
+            },
+            {
+                "id": 6,
+                "title": "Quote Response Time",
+                "type": "heatmap",
+                "targets": [
+                    {
+                        "query": "histogram_quantile(0.95, rate(bitroute_quote_duration_seconds[5m]))"
+                    }
+                ]
+            }
+        ]
+    }
+}

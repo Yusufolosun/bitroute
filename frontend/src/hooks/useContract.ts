@@ -11,6 +11,8 @@ import {
   getDexName,
   BestRouteResponse,
 } from '@/lib/contract';
+import { captureSwapError, captureQuoteError } from '@/lib/sentry';
+import { log } from '@/lib/logger';
 
 export function useContract() {
   const { userSession } = useWallet();
@@ -27,14 +29,19 @@ export function useContract() {
   ): Promise<BestRouteResponse | null> => {
     setIsLoading(true);
     setError(null);
+    log.info('Fetching quote', { tokenIn, tokenOut, amountIn });
 
     try {
       const route = await getBestRoute(tokenIn, tokenOut, amountIn);
-      console.log('✅ Got quote:', route);
+      log.info('Quote received', { route });
       return route;
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to get quote';
-      console.error('❌ Quote error:', message);
+
+      // Track error
+      captureQuoteError(err as Error, 'both');
+      log.error('Quote failed', { error: err, tokenIn, tokenOut });
+
       setError(message);
       return null;
     } finally {
@@ -60,6 +67,7 @@ export function useContract() {
 
     setIsLoading(true);
     setError(null);
+    log.info('Initiating swap', { tokenIn, tokenOut, amountIn, minAmountOut });
 
     try {
       const txOptions = await executeAutoSwap(
@@ -69,14 +77,14 @@ export function useContract() {
         amountIn,
         minAmountOut,
         (data) => {
-          console.log('✅ Swap successful:', data);
+          log.info('Swap transaction broadcasted', { txId: data.txId });
           if (onSuccess && data.txId) {
             onSuccess(data.txId);
           }
           setIsLoading(false);
         },
         () => {
-          console.log('❌ Swap cancelled');
+          log.warn('Swap cancelled by user');
           setError('Transaction cancelled');
           setIsLoading(false);
           if (onError) {
@@ -85,11 +93,18 @@ export function useContract() {
         }
       );
 
-      // Open wallet popup to sign transaction
       await openContractCall(txOptions);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to execute swap';
-      console.error('❌ Swap error:', message);
+
+      // Track swap error
+      captureSwapError(err as Error, {
+        tokenIn,
+        tokenOut,
+        amount: amountIn.toString(),
+      });
+      log.error('Swap failed', { error: err });
+
       setError(message);
       setIsLoading(false);
       if (onError) {
