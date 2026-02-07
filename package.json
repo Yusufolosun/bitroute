@@ -33,7 +33,9 @@
   },
   "devDependencies": {
     "@stacks/network": "^6.13.0",
-    "@stacks/transactions": "^6.13.0"
+    "@stacks/transactions": "^6.13.0",
+    "@types/puppeteer": "^5.4.7",
+    "puppeteer": "^24.37.2"
   },
   "engines": {
     "node": ">=18.0.0",
