@@ -295,26 +295,42 @@
 ;; Public Functions
 ;; -----------------------------------
 
+;; calculate-fee
+;;
+;; Description: Compute protocol fee from an input amount
+;; Fee = amount-in * protocol-fee-bps / 10000
+;; Uses integer division (floor) — rounding favours the user
+(define-private (calculate-fee (amount uint))
+  (/ (* amount (var-get protocol-fee-bps)) u10000)
+)
+
 ;; execute-auto-swap
 ;; 
-;; Description: Executes token swap by auto-routing to the DEX with best price
+;; Description: Executes token swap by auto-routing to the DEX with best price.
+;;   Deducts a protocol fee (in basis points) from the input amount before
+;;   routing the remainder to the best-priced DEX. The fee is transferred from
+;;   the user to this contract and recorded in fee-balances for later
+;;   withdrawal by the admin.
+;;
 ;; Parameters:
 ;;   - token-in: Input token contract (must implement ft-trait)
 ;;   - token-out: Output token contract (must implement ft-trait)
 ;;   - amount-in: Amount of input tokens to swap (must be > 0)
 ;;   - min-amount-out: Minimum acceptable output (slippage protection)
-;; Returns: Response with DEX used and actual output amount
+;; Returns: Response with DEX used, actual output amount, and fee charged
 ;; Errors:
 ;;   - ERR-CONTRACT-PAUSED: Contract is in emergency pause state
 ;;   - ERR-INVALID-AMOUNT: amount-in is zero or invalid
 ;;   - ERR-SLIPPAGE-TOO-HIGH: Output below min-amount-out threshold
 ;;   - ERR-DEX-CALL-FAILED: Failed to get route from DEXs
-;; 
+;;   - ERR-FEE-TRANSFER-FAILED: Fee transfer from user to contract failed
+;;
 ;; Side Effects:
+;;   - Transfers protocol fee from user to contract
+;;   - Accumulates fee in fee-balances map
 ;;   - Updates dex-volume map with aggregated volume per DEX
 ;;   - Updates user-swaps map with user activity tracking
-;; 
-;; TODO: Add actual token transfers and DEX integrations via contract-call
+;;
 ;; SECURITY: Slippage protection is critical
 ;; Users must set min-amount-out to protect against price manipulation
 (define-public (execute-auto-swap
@@ -336,27 +352,55 @@
     (asserts! (not (is-eq (contract-of token-in) (contract-of token-out))) ERR-SAME-TOKEN)
     
     ;; VALIDATION: Slippage makes sense (min-out should not exceed amount-in)
-    ;; Note: This is a loose check as prices vary, but 1:1 is a safe upper bound for validation
     (asserts! (<= min-amount-out amount-in) ERR-INVALID-SLIPPAGE)
     
-    ;; Step 3-8: Get route and execute swap
     (let
       (
-        (route (unwrap! (get-best-route (contract-of token-in) (contract-of token-out) amount-in) ERR-DEX-CALL-FAILED))
+        ;; Calculate protocol fee and net amount after fee
+        (fee-amount (calculate-fee amount-in))
+        (net-amount (- amount-in fee-amount))
+        (token-in-principal (contract-of token-in))
+        (token-out-principal (contract-of token-out))
+        
+        ;; Get best route based on the net amount (what actually goes to the DEX)
+        (route (unwrap! (get-best-route token-in-principal token-out-principal net-amount) ERR-DEX-CALL-FAILED))
         (best-dex (get best-dex route))
-        (amount-out amount-in)
+        (expected-out (get expected-amount-out route))
+        
+        ;; Current fee balance for this token
+        (current-fee-balance (default-to { balance: u0 } (map-get? fee-balances { token: token-in-principal })))
         (current-dex-volume (default-to { total-volume: u0 } (map-get? dex-volume { dex-id: best-dex })))
         (current-user-swaps (default-to { swap-count: u0, total-volume: u0 } (map-get? user-swaps { user: tx-sender })))
       )
       
-      ;; SECURITY: CRITICAL - Enforce slippage protection
-      ;; This prevents users from accepting unfavorable trades
-      (asserts! (>= amount-out min-amount-out) ERR-SLIPPAGE-TOO-HIGH)
+      ;; SECURITY: CRITICAL - Enforce slippage protection on expected output
+      (asserts! (>= expected-out min-amount-out) ERR-SLIPPAGE-TOO-HIGH)
+      
+      ;; Transfer protocol fee from user to this contract
+      ;; Fee stays in contract until admin calls collect-fees
+      (if (> fee-amount u0)
+        (unwrap! (contract-call? token-in transfer fee-amount tx-sender (as-contract tx-sender) none) ERR-FEE-TRANSFER-FAILED)
+        true
+      )
+      
+      ;; Accumulate fee in fee-balances map
+      (if (> fee-amount u0)
+        (map-set fee-balances
+          { token: token-in-principal }
+          { balance: (+ (get balance current-fee-balance) fee-amount) })
+        true
+      )
+      
+      ;; TODO: Route net-amount through the selected DEX via contract-call
+      ;; In production this would be:
+      ;;   DEX-ALEX: (contract-call? ALEX-VAULT swap-helper ...)
+      ;;   DEX-VELAR: (contract-call? VELAR-ROUTER swap-exact-tokens-for-tokens ...)
+      ;; For now the swap uses mock quotes; the fee mechanism is fully functional.
       
       ;; Update dex-volume tracking (aggregate volume per DEX)
       (map-set dex-volume
         { dex-id: best-dex }
-        { total-volume: (+ (get total-volume current-dex-volume) amount-in) }
+        { total-volume: (+ (get total-volume current-dex-volume) net-amount) }
       )
       
       ;; Update user-swaps tracking (user activity metrics)
@@ -368,10 +412,11 @@
         }
       )
       
-      ;; Return swap result with DEX identifier and output amount
+      ;; Return swap result with DEX identifier, output amount, and fee
       (ok {
         dex-used: best-dex,
-        amount-out: amount-out
+        amount-out: expected-out,
+        fee-charged: fee-amount
       })
     )
   )
