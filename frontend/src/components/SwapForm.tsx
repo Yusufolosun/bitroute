@@ -5,7 +5,7 @@ import TokenSelector, { Token } from './TokenSelector';
 import AmountInput from './AmountInput';
 import { useWallet } from '@/contexts/WalletContext';
 import { useContract } from '@/hooks/useContract';
-import { microToStx } from '@/lib/stacks';
+import { microToStx, formatSTX } from '@/lib/stacks';
 import { CONTRACT_ADDRESS, DEFAULT_NETWORK } from '@/lib/constants';
 import { useTransaction } from '@/contexts/TransactionContext';
 import { TransactionStatus } from '@/types/transaction';
@@ -32,6 +32,9 @@ export default function SwapForm() {
   const [errorState, setErrorState] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
   const [quoteTimestamp, setQuoteTimestamp] = useState<number | null>(null);
+
+  // Protocol fee in basis points (30 bps = 0.30%)
+  const PROTOCOL_FEE_BPS = 30;
 
   useEffect(() => {
     if (!quoteTimestamp || !amountOut) return;
@@ -263,20 +266,33 @@ export default function SwapForm() {
         </div>
       )}
 
-      {/* Estimated Fee Display */}
-      {amountOut && (
-        <div className="flex justify-between items-center mt-2">
-          <span className="text-sm text-gray-600 dark:text-gray-400">
-            Estimated Fee
-          </span>
-          <span className="font-semibold text-gray-900 dark:text-white">
-            ~0.003 STX (~$0.006)
-          </span>
-        </div>
-      )}
-      {amountOut && (
-        <div className="mt-2 p-2 bg-gray-50 dark:bg-gray-800 rounded text-xs text-gray-500 dark:text-gray-400">
-          ℹ️ Fees include: Network fee (~0.002 STX) + DEX fee (0.3%)
+      {/* Fee Breakdown */}
+      {amountOut && amountIn && (
+        <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-3 space-y-2">
+          <div className="flex justify-between items-center">
+            <span className="text-sm text-gray-600 dark:text-gray-400">
+              Protocol Fee ({(PROTOCOL_FEE_BPS / 100).toFixed(2)}%)
+            </span>
+            <span className="font-semibold text-gray-900 dark:text-white">
+              {(parseFloat(amountIn) * PROTOCOL_FEE_BPS / 10000).toFixed(6)} {tokenIn?.symbol}
+            </span>
+          </div>
+          <div className="flex justify-between items-center">
+            <span className="text-sm text-gray-600 dark:text-gray-400">
+              Network Fee (est.)
+            </span>
+            <span className="font-semibold text-gray-900 dark:text-white">
+              ~0.002 STX
+            </span>
+          </div>
+          <div className="flex justify-between items-center pt-2 border-t border-gray-200 dark:border-gray-700">
+            <span className="text-sm text-gray-600 dark:text-gray-400">
+              Amount to DEX
+            </span>
+            <span className="font-semibold text-gray-900 dark:text-white">
+              {(parseFloat(amountIn) * (1 - PROTOCOL_FEE_BPS / 10000)).toFixed(6)} {tokenIn?.symbol}
+            </span>
+          </div>
         </div>
       )}
 
