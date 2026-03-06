@@ -9,7 +9,7 @@ vi.mock('@/hooks/useContract', () => ({
         swap: vi.fn(),
         isLoading: false,
         error: null,
-        getDexName: (id: number) => (id === 0 ? 'ALEX' : 'Velar'),
+        getDexName: (id: number) => (id === 1 ? 'ALEX' : 'Velar'),
     }),
 }));
 

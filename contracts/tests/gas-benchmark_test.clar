@@ -1,25 +1,31 @@
 ;; Gas Benchmarking Test Suite
 ;; This contract measures the gas consumption of key router functions
 
-(use-trait ft-trait 'SP3FBR2AGK5H9QBDH3EEN6DF8EK8JY7RX8QJ5SVTE.sip-010-trait-ft-standard.sip-010-trait)
-
-(define-public (benchmark-get-quote (token-in <ft-trait>) (token-out <ft-trait>) (amount uint))
+(define-public (benchmark-get-quote)
   (begin
-    (print (contract-call? .router get-best-route token-in token-out amount))
+    (print (contract-call? .router get-best-route
+      'ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.mock-token
+      'ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.router
+      u1000000))
     (ok true)
   )
 )
 
-(define-public (benchmark-swap (token-in <ft-trait>) (token-out <ft-trait>) (amount-in uint) (min-amount-out uint))
+(define-public (benchmark-pause-unpause)
   (begin
-    (print (contract-call? .router swap-alex token-in token-out amount-in min-amount-out))
+    (print (contract-call? .router set-paused true))
+    (print (contract-call? .router set-paused false))
     (ok true)
   )
 )
 
-(define-public (benchmark-multi-swap (token-in <ft-trait>) (token-out <ft-trait>) (amount-in uint) (min-amount-out uint))
+(define-public (benchmark-read-only-calls)
   (begin
-    (print (contract-call? .router auto-route-swap token-in token-out amount-in min-amount-out))
+    (print (contract-call? .router is-paused))
+    (print (contract-call? .router get-dex-volume u1))
+    (print (contract-call? .router get-dex-volume u2))
+    (print (contract-call? .router get-user-stats tx-sender))
+    (print (contract-call? .router get-protocol-fee))
     (ok true)
   )
 )

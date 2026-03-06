@@ -1,28 +1,27 @@
 ;; Edge Case and Boundary Test Suite
 ;; This contract tests extreme scenarios and invalid inputs
 
-(use-trait ft-trait 'SP3FBR2AGK5H9QBDH3EEN6DF8EK8JY7RX8QJ5SVTE.sip-010-trait-ft-standard.sip-010-trait)
+;; Note: get-best-route takes principal args, not trait refs
 
-(define-public (test-zero-amount (token-in <ft-trait>) (token-out <ft-trait>))
-  (contract-call? .router get-best-route token-in token-out u0)
+(define-public (test-zero-amount)
+  (contract-call? .router get-best-route
+    'ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.mock-token
+    'ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.router
+    u0)
 )
 
-(define-public (test-same-token (token <ft-trait>) (amount uint))
-  (contract-call? .router get-best-route token token amount)
+(define-public (test-same-token-quote)
+  (contract-call? .router get-best-route
+    'ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.mock-token
+    'ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.mock-token
+    u1000)
 )
 
-(define-public (test-max-uint (token-in <ft-trait>) (token-out <ft-trait>))
-  (contract-call? .router get-best-route token-in token-out u18446744073709551615)
-)
-
-(define-public (test-slippage-boundary (token-in <ft-trait>) (token-out <ft-trait>) (amount-in uint))
-  (begin
-    ;; 100% slippage (should pass but be dangerous)
-    (print (contract-call? .router swap-alex token-in token-out amount-in u0))
-    ;; Exact amount (should pass if price matches)
-    (print (contract-call? .router swap-alex token-in token-out amount-in amount-in))
-    (ok true)
-  )
+(define-public (test-max-uint)
+  (contract-call? .router get-best-route
+    'ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.mock-token
+    'ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.router
+    u18446744073709551615)
 )
 
 (define-public (test-reentrancy-scenario)

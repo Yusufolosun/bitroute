@@ -27,7 +27,7 @@ describe("BitRoute Router Contract", () => {
       "execute-auto-swap",
       [
         Cl.contractPrincipal(deployer, "mock-token"),
-        Cl.contractPrincipal(deployer, "router"),
+        Cl.contractPrincipal(deployer, "mock-token-b"),
         Cl.uint(0), // Invalid zero amount
         Cl.uint(0),
       ],
@@ -77,7 +77,7 @@ describe("BitRoute Router Contract", () => {
       "get-best-route",
       [
         Cl.principal(deployer + ".mock-token"),
-        Cl.principal(deployer + ".router"),
+        Cl.principal(deployer + ".mock-token-b"),
         Cl.uint(1000),
       ],
       deployer

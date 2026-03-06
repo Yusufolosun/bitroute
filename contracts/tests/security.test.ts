@@ -7,7 +7,7 @@ const wallet1 = accounts.get("wallet_1")!;
 
 describe("BitRoute Security Hardening", () => {
     const tokenA = Cl.contractPrincipal(deployer, "mock-token");
-    const tokenB = Cl.contractPrincipal(deployer, "router"); // Using router as a second different token contract principal
+    const tokenB = Cl.contractPrincipal(deployer, "mock-token-b");
 
     it("prevents swapping the same token", () => {
         const response = simnet.callPublicFn(

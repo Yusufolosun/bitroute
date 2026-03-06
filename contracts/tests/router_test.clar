@@ -10,8 +10,8 @@
 (define-public (test-get-best-route-returns-data)
   (let (
     (result (contract-call? .router get-best-route 
-              'SP000000000000000000002Q6VF78.token-a
-              'SP000000000000000000002Q6VF78.token-b
+              'SP3K8BC0PPEVCV7NZ6QSRWPQ2JE9E5B6N3PA0KBR9.token-wstx
+              'SP3K8BC0PPEVCV7NZ6QSRWPQ2JE9E5B6N3PA0KBR9.token-wusda
               u1000))
   )
   (begin
@@ -29,8 +29,8 @@
 (define-public (test-execute-auto-swap-validates-amount)
   (let (
     (result (contract-call? .router execute-auto-swap
-              'SP000000000000000000002Q6VF78.token-a
-              'SP000000000000000000002Q6VF78.token-b
+              .mock-token
+              .mock-token-b
               u0
               u0))
   )
@@ -52,8 +52,8 @@
     ;; Attempt swap
     (let (
       (result (contract-call? .router execute-auto-swap
-                'SP000000000000000000002Q6VF78.token-a
-                'SP000000000000000000002Q6VF78.token-b
+                .mock-token
+                .mock-token-b
                 u1000
                 u900))
     )
@@ -105,14 +105,16 @@
 )
 
 ;; Test 6: Verify min-amount-out validation works
+;; Mock quotes return u1000, so min-amount-out of u1001 triggers ERR-SLIPPAGE-TOO-HIGH
 (define-public (test-slippage-protection-enforced)
   (let (
-    ;; Request swap with impossible min-amount-out
+    ;; Use amount-in large enough so min-amount-out passes the INVALID-SLIPPAGE check
+    ;; but exceeds the mock expected-out (u1000)
     (result (contract-call? .router execute-auto-swap
-              'SP000000000000000000002Q6VF78.token-a
-              'SP000000000000000000002Q6VF78.token-b
-              u1000
-              u999999))
+              .mock-token
+              .mock-token-b
+              u5000
+              u1001))
   )
   (begin
     ;; Should fail with ERR-SLIPPAGE-TOO-HIGH (u101)
