@@ -123,6 +123,20 @@ export const ERRORS = {
   INVALID_AMOUNT: 102,
   CONTRACT_PAUSED: 103,
   DEX_CALL_FAILED: 104,
+  NO_LIQUIDITY: 105,
+  BOTH_DEXS_FAILED: 106,
+  AMOUNT_TOO_LARGE: 107,
+  SAME_TOKEN: 108,
+  INVALID_SLIPPAGE: 109,
+  FEE_TRANSFER_FAILED: 112,
+  FEE_TOO_HIGH: 113,
+  NO_FEE_TO_COLLECT: 114,
+} as const;
+
+// Protocol fee configuration
+export const PROTOCOL_FEE = {
+  DEFAULT_BPS: 30,     // 0.30%
+  MAX_BPS: 100,        // 1.00% hard cap
 } as const;
 
 // UI configuration
