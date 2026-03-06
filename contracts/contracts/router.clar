@@ -68,7 +68,7 @@
 
 ;; Protocol fee configuration
 ;; 1 basis point = 0.01%, so 30 bps = 0.30%
-(define-constant MAX-FEE-BPS u100)  ;; Hard cap: 1.00% — cannot be exceeded even by admin
+(define-constant MAX-FEE-BPS u100)  ;; Hard cap: 1.00% - cannot be exceeded even by admin
 
 ;; ===================================================================
 ;; ALEX PROTOCOL CONFIGURATION
@@ -299,7 +299,7 @@
 ;;
 ;; Description: Compute protocol fee from an input amount
 ;; Fee = amount-in * protocol-fee-bps / 10000
-;; Uses integer division (floor) — rounding favours the user
+;; Uses integer division (floor) - rounding favours the user
 (define-private (calculate-fee (amount uint))
   (/ (* amount (var-get protocol-fee-bps)) u10000)
 )
@@ -361,6 +361,7 @@
         (net-amount (- amount-in fee-amount))
         (token-in-principal (contract-of token-in))
         (token-out-principal (contract-of token-out))
+        (contract-self (as-contract tx-sender))
         
         ;; Get best route based on the net amount (what actually goes to the DEX)
         (route (unwrap! (get-best-route token-in-principal token-out-principal net-amount) ERR-DEX-CALL-FAILED))
@@ -379,7 +380,7 @@
       ;; Transfer protocol fee from user to this contract
       ;; Fee stays in contract until admin calls collect-fees
       (if (> fee-amount u0)
-        (unwrap! (contract-call? token-in transfer fee-amount tx-sender (as-contract tx-sender) none) ERR-FEE-TRANSFER-FAILED)
+        (unwrap! (contract-call? token-in transfer fee-amount tx-sender contract-self none) ERR-FEE-TRANSFER-FAILED)
         true
       )
       
