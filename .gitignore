@@ -8,6 +8,31 @@ yarn-error.log*
 .env
 .env.local
 .env.*.local
+.env.production
+.env.staging
+
+# Sensitive / Secret files
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.keystore
+*.secret
+*.credentials
+*.secrets
+
+# Wallet / Mnemonic files
+*.seed
+*.mnemonic
+wallet.json
+keystore/
+
+# Settings files with mnemonics/keys
+contracts/settings/Devnet.toml
+contracts/settings/Simnet.toml*
+contracts/settings/Testnet.toml
+contracts/settings/Mainnet.toml
 
 # IDE
 .vscode/
