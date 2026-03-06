@@ -51,6 +51,9 @@
 (define-constant ERR-AMOUNT-TOO-LARGE (err u107))
 (define-constant ERR-SAME-TOKEN (err u108))
 (define-constant ERR-INVALID-SLIPPAGE (err u109))
+(define-constant ERR-FEE-TRANSFER-FAILED (err u112))
+(define-constant ERR-FEE-TOO-HIGH (err u113))
+(define-constant ERR-NO-FEE-TO-COLLECT (err u114))
 
 ;; -----------------------------------
 ;; Configuration Constants
@@ -62,6 +65,10 @@
 
 ;; Contract owner constant
 (define-constant CONTRACT-OWNER tx-sender)
+
+;; Protocol fee configuration
+;; 1 basis point = 0.01%, so 30 bps = 0.30%
+(define-constant MAX-FEE-BPS u100)  ;; Hard cap: 1.00% — cannot be exceeded even by admin
 
 ;; ===================================================================
 ;; ALEX PROTOCOL CONFIGURATION
@@ -100,6 +107,9 @@
 ;; Emergency pause flag for halting all operations
 (define-data-var contract-paused bool false)
 
+;; Protocol fee in basis points (default 30 = 0.30%)
+(define-data-var protocol-fee-bps uint u30)
+
 ;; Add two-step admin transfer (Documentation only - requires deployment update)
 (define-data-var pending-admin (optional principal) none)
 
@@ -117,6 +127,12 @@
 (define-map user-swaps
   { user: principal }
   { swap-count: uint, total-volume: uint }
+)
+
+;; Accumulated protocol fee balances per token
+(define-map fee-balances
+  { token: principal }
+  { balance: uint }
 )
 
 ;; Pool factor configurations for ALEX DEX
