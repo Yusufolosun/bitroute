@@ -1,0 +1,50 @@
+# Copy this file to Devnet.toml and fill in your own mnemonics
+# NEVER commit Devnet.toml — it contains secret keys!
+#
+# Generate mnemonics with: node contracts/scripts/generate-mnemonics.js
+
+[network]
+name = "devnet"
+deployment_fee_rate = 10
+
+[accounts.deployer]
+mnemonic = "<YOUR_DEPLOYER_MNEMONIC_HERE>"
+balance = 100_000_000_000_000
+sbtc_balance = 1_000_000_000
+
+[accounts.wallet_1]
+mnemonic = "<YOUR_WALLET_1_MNEMONIC_HERE>"
+balance = 100_000_000_000_000
+sbtc_balance = 1_000_000_000
+
+[accounts.wallet_2]
+mnemonic = "<YOUR_WALLET_2_MNEMONIC_HERE>"
+balance = 100_000_000_000_000
+sbtc_balance = 1_000_000_000
+
+[accounts.wallet_3]
+mnemonic = "<YOUR_WALLET_3_MNEMONIC_HERE>"
+balance = 100_000_000_000_000
+sbtc_balance = 1_000_000_000
+
+[accounts.wallet_4]
+mnemonic = "<YOUR_WALLET_4_MNEMONIC_HERE>"
+balance = 100_000_000_000_000
+sbtc_balance = 1_000_000_000
+
+[devnet]
+disable_stacks_explorer = false
+disable_stacks_api = false
+
+[devnet.postgres]
+port = 5433
+
+[devnet.stacks_api]
+port = 3001
+
+[devnet.stacks_node]
+rpc_port = 20444
+
+[devnet.bitcoin_node]
+rpc_port = 18444
+p2p_port = 18445
