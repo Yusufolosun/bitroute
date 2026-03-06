@@ -15,6 +15,48 @@ import {
   DEFAULT_NETWORK,
   NETWORKS,
 } from './constants';
+import {
+  formatSTX,
+  formatSTXWithUnit,
+  toMicroSTX,
+  toSTX,
+  shortenAddress,
+  txUrl,
+  validateStake,
+  registerErrors,
+  decodeError,
+  isValidAddress,
+  validatePrincipal,
+} from '@yusufolosun/stx-utils';
+
+// Re-export stx-utils functions for use across the app
+export {
+  formatSTX,
+  formatSTXWithUnit,
+  shortenAddress,
+  txUrl,
+  validateStake,
+  decodeError,
+  isValidAddress,
+  validatePrincipal,
+};
+
+// Register BitRoute contract error codes on module load
+registerErrors({
+  100: 'Not authorized',
+  101: 'Slippage too high — output below your minimum',
+  102: 'Invalid amount',
+  103: 'Contract is paused',
+  104: 'DEX call failed',
+  105: 'No liquidity available',
+  106: 'Both DEXs failed',
+  107: 'Amount too large',
+  108: 'Cannot swap same token',
+  109: 'Invalid slippage parameter',
+  112: 'Fee transfer failed',
+  113: 'Fee exceeds maximum',
+  114: 'No fees to collect',
+});
 
 /**
  * Get the current Stacks network configuration
@@ -24,34 +66,29 @@ export function getNetwork() {
 }
 
 /**
- * Convert microSTX to STX
- * @param micro - Amount in microSTX (1 STX = 1,000,000 microSTX)
- * @returns Amount in STX
+ * Convert microSTX to STX (delegates to @yusufolosun/stx-utils)
  */
 export function microToStx(micro: number | bigint): number {
-  return Number(micro) / 1_000_000;
+  return toSTX(Number(micro));
 }
 
 /**
- * Convert STX to microSTX
- * @param stx - Amount in STX
- * @returns Amount in microSTX
+ * Convert STX to microSTX (delegates to @yusufolosun/stx-utils)
  */
 export function stxToMicro(stx: number): bigint {
-  return BigInt(Math.floor(stx * 1_000_000));
+  return BigInt(toMicroSTX(stx));
 }
 
 /**
- * Format STX amount for display
- * @param amount - Amount in STX or microSTX
- * @returns Formatted string with comma separators
+ * Format STX amount for display (delegates to @yusufolosun/stx-utils)
  */
 export function formatStx(amount: number | bigint): string {
-  const stx = typeof amount === 'bigint' ? microToStx(amount) : amount;
-  return stx.toLocaleString(undefined, {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 6,
-  });
+  if (typeof amount === 'bigint' || amount > 1_000) {
+    // Treat as microSTX
+    return formatSTX(Number(amount), 6);
+  }
+  // Already in STX — convert to micro first for consistent formatting
+  return formatSTX(toMicroSTX(amount), 6);
 }
 
 /**
