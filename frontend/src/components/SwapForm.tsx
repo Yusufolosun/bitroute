@@ -84,6 +84,8 @@ export default function SwapForm() {
         tokenIn: tokenIn.symbol,
         tokenOut: tokenOut.symbol,
         bestDex: getDexName(quote.bestDex),
+        alexQuote: microToStx(quote.alexQuote).toFixed(6),
+        velarQuote: microToStx(quote.velarQuote).toFixed(6),
       });
     }
   };
