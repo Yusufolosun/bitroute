@@ -7,11 +7,12 @@ cache_dir = "./.cache"
 
 [contracts.router]
 path = "contracts/router.clar"
-epoch = "latest"
 
 [contracts.mock-token]
 path = "contracts/mock-token.clar"
-epoch = "latest"
+
+[contracts.mock-token-b]
+path = "contracts/mock-token-b.clar"
 
 [repl.analysis]
 passes = ["check_checker"]
