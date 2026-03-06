@@ -1,302 +1,69 @@
 # Testing Guide
 
-Comprehensive guide for testing BitRoute contracts and frontend.
+## Quick Start
 
-## Table of Contents
+```bash
+# Contract tests (10 tests)
+cd contracts && npm test
 
-1. [Contract Testing](#contract-testing)
-2. [Frontend Testing](#frontend-testing)
-3. [Integration Testing](#integration-testing)
-4. [Manual Testing](#manual-testing)
+# Frontend tests (4 tests)
+cd frontend && npm test
 
----
+# Both
+npm run test:contracts && cd frontend && npm test
+```
 
-## Contract Testing
+## Contract Tests
 
-### Setup
+Framework: Clarinet SDK + Vitest (`vitest-environment-clarinet`)
+
+### Test Files
+
+| File | Tests | Covers |
+|------|-------|--------|
+| `tests/router.test.ts` | 4 | Core routing, swap execution, fee mechanism |
+| `tests/router_test.clar` | 2 | get-best-route, execute-auto-swap basics |
+| `tests/security_test.clar` | 2 | Pause authorization, admin access control |
+| `tests/edge-cases_test.clar` | 2 | Zero amount, slippage protection |
+
+### Test Tokens
+
+- `mock-token.clar` — SIP-010 token A (also defines `ft-trait`)
+- `mock-token-b.clar` — SIP-010 token B (different token for swap testing)
+
+Both are test-only. The router is the single production contract.
+
+### Running
+
 ```bash
 cd contracts
-npm install
+npm test              # All tests
+npx vitest run tests/router.test.ts  # Specific file
 ```
 
-### Running Tests
-```bash
-# Run all tests
-clarinet test
+## Frontend Tests
 
-# Run specific test file
-clarinet test tests/router_test.clar
+Framework: Vitest + jsdom + @testing-library/react
 
-# Verbose output
-clarinet test --verbose
-```
+### Test Files
 
-### Test Structure
-```clarity
-;; tests/router_test.clar
+| File | Tests | Covers |
+|------|-------|--------|
+| `src/__tests__/SwapForm.test.tsx` | 4 | Rendering, quote display, fee breakdown, DEX name |
 
-(define-public (test-get-best-route-returns-data)
-  (let (
-    (result (contract-call? .router get-best-route 
-              'SP...token-a
-              'SP...token-b
-              u1000))
-  )
-  (begin
-    (asserts! (is-ok result) (err u1))
-    (ok true)
-  ))
-)
-```
+### Running
 
-### Current Test Coverage
-```
-✓ test-get-best-route-returns-data
-✓ test-execute-auto-swap-validates-amount
-✓ test-paused-contract-blocks-swaps
-✓ test-unauthorized-pause-rejected
-✓ test-volume-tracking-updates
-✓ test-slippage-protection-enforced
-
-Coverage: 6/6 tests passing
-```
-
-### Writing New Tests
-
-1. **Create test file**: `tests/your-feature_test.clar`
-
-2. **Define test function**:
-```clarity
-(define-public (test-your-feature)
-  (begin
-    ;; Setup
-    ;; Execute
-    ;; Assert
-    (ok true)
-  ))
-```
-
-3. **Run test**:
-```bash
-clarinet test tests/your-feature_test.clar
-```
-
----
-
-## Frontend Testing
-
-### Setup
 ```bash
 cd frontend
-npm install
-```
-
-### Unit Tests (To be implemented)
-```bash
 npm test
 ```
 
-### Component Testing Template
-```typescript
-// __tests__/SwapForm.test.tsx
-import { render, screen } from '@testing-library/react';
-import SwapForm from '@/components/SwapForm';
+## Testnet Integration
 
-describe('SwapForm', () => {
-  it('renders token selectors', () => {
-    render();
-    expect(screen.getByText('From')).toBeInTheDocument();
-    expect(screen.getByText('To')).toBeInTheDocument();
-  });
-  
-  it('validates amount input', () => {
-    // Test implementation
-  });
-});
-```
-
----
-
-## Integration Testing
-
-### Testnet Integration Flow
-
-1. **Deploy Contract**
-```bash
-cd contracts
-clarinet deployments apply --testnet
-```
-
-2. **Get Testnet STX**
-- Visit faucet
-- Request tokens
-- Verify balance
-
-3. **Configure Frontend**
-```env
-NEXT_PUBLIC_NETWORK=testnet
-```
-
-4. **Test User Flow**
-- Connect wallet
-- Select tokens
-- Get quote
-- Execute swap
-- Verify transaction
-
-### Test Checklist
-
-- [ ] Wallet connects successfully
-- [ ] Token selection works
-- [ ] Amount validation prevents invalid inputs
-- [ ] Quote returns expected data
-- [ ] Swap triggers wallet popup
-- [ ] Transaction broadcasts successfully
-- [ ] Status updates correctly
-- [ ] History updates
-- [ ] Error states display properly
-
----
-
-## Manual Testing
-
-### Test Scenarios
-
-#### Scenario 1: Happy Path Swap
-
-1. Open app in browser
-2. Connect Leather wallet (testnet)
-3. Select STX → USDA
-4. Enter 100 STX
-5. Click "Get Best Price"
-6. Verify quote shows ALEX as best
-7. Click "Swap Tokens"
-8. Approve in wallet
-9. Wait for confirmation
-10. Verify success message
-
-**Expected**: Transaction succeeds, history updates
-
-#### Scenario 2: Slippage Protection
-
-1. Get quote for 100 STX
-2. Set slippage to 0.1%
-3. Wait 30 seconds (quote becomes stale)
-4. Try to swap
-5. Should fail with slippage error
-
-**Expected**: Transaction rejected, error displayed
-
-#### Scenario 3: Insufficient Balance
-
-1. Try to swap 1,000,000 STX (more than balance)
-2. Wallet should show insufficient funds
-
-**Expected**: Wallet prevents transaction
-
-#### Scenario 4: Network Switch
-
-1. Connect on testnet
-2. Get quote
-3. Switch wallet to mainnet
-4. Try to swap
-
-**Expected**: Error about network mismatch
-
-#### Scenario 5: Contract Paused
-
-1. (As admin) Pause contract
-2. Try to execute swap
-3. Should fail with "contract paused" error
-
-**Expected**: Transaction rejected
-
----
-
-## Performance Testing
-
-### Load Testing (Future)
-
-Test contract with high volume:
-```bash
-# Simulate 100 swaps
-for i in {1..100}; do
-  clarinet console -c "(contract-call? .router execute-auto-swap ...)"
-done
-```
-
-### Gas Optimization
-
-Monitor gas costs:
-```clarity
-;; Check transaction cost
-(print (stx-get-balance tx-sender))
-;; Execute swap
-;; Check balance again
-```
-
-Target: <0.003 STX per swap
-
----
-
-## Regression Testing
-
-### Before Each Release
-
-1. Run all contract tests
-2. Deploy to testnet
-3. Manual test all user flows
-4. Check for console errors
-5. Test on multiple browsers
-6. Test mobile responsive
-7. Verify network switching
-8. Test error scenarios
-
-### Automated Regression Suite (Future)
-```bash
-# Run full test suite
-npm run test:all
-
-# Contract tests
-npm run test:contracts
-
-# Frontend tests
-npm run test:frontend
-
-# E2E tests
-npm run test:e2e
-```
-
----
-
-## Debugging Tips
-
-### Contract Debugging
-```clarity
-;; Add print statements
-(print "Amount in:")
-(print amount-in)
-
-;; Check with clarinet console
->> (contract-call? .router get-best-route ...)
-```
-
-### Frontend Debugging
-```typescript
-// Add console logs
-console.log('🔍 Token addresses:', { tokenIn, tokenOut });
-
-// Check network requests
-// Open browser DevTools → Network tab
-
-// Inspect contract responses
-console.log('📦 Raw result:', result);
-```
-
-### Common Issues
-
-**Issue**: Tests fail locally
-- **Fix**: Clear cache: `rm -rf .cache`
+1. Deploy: `cd contracts && clarinet deployments apply --testnet`
+2. Get STX: https://explorer.hiro.so/sandbox/faucet?chain=testnet
+3. Set `NEXT_PUBLIC_NETWORK=testnet` in `.env`
+4. Test: connect wallet → select tokens → get quote → execute swap
 
 **Issue**: Contract call fails
 - **Fix**: Check contract address in constants.ts

@@ -1,7 +1,7 @@
 # Copy this file to Devnet.toml and fill in your own mnemonics
 # NEVER commit Devnet.toml — it contains secret keys!
 #
-# Generate mnemonics with: node contracts/scripts/generate-mnemonics.js
+# Generate mnemonics at: https://iancoleman.io/bip39/
 
 [network]
 name = "devnet"

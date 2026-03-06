@@ -1,121 +1,60 @@
-# BitRoute API Documentation
+# BitRoute API Reference
 
-## Smart Contract API
-
-### Contract Address
-- **Testnet**: `ST2NEB84ASENDXKYGJPQW86YXQCEFEX2ZQPG87ND.router`
-- **Mainnet**: TBD
-
----
+Contract: `router.clar`
 
 ## Read-Only Functions
 
 ### get-best-route
 
-Get the best price quote across all integrated DEXs.
+Compare quotes from ALEX and Velar to find the best price.
 
-**Function Signature:**
 ```clarity
-(define-read-only (get-best-route
-    (token-in principal)
-    (token-out principal)
-    (amount-in uint))
-    (response {...} uint)
-)
+(get-best-route (token-in principal) (token-out principal) (amount-in uint))
 ```
-
-**Parameters:**
-- `token-in`: Contract principal of input token
-- `token-out`: Contract principal of output token
-- `amount-in`: Amount in micro-units (1 STX = 1,000,000 µSTX)
 
 **Returns:**
 ```clarity
 (ok {
-  best-dex: uint,              // 1=ALEX, 2=Velar
-  expected-amount-out: uint,   // Expected output (micro-units)
-  alex-quote: uint,            // ALEX quote (micro-units)
-  velar-quote: uint            // Velar quote (micro-units)
+  best-dex: uint,            ;; 1 = ALEX, 2 = Velar
+  expected-amount-out: uint,  ;; Best quote (micro-units)
+  alex-quote: uint,
+  velar-quote: uint
 })
 ```
 
-**Example (JavaScript):**
-```javascript
-import { callReadOnlyFunction, principalCV, uintCV } from '@stacks/transactions';
+### get-protocol-fee
 
-const result = await callReadOnlyFunction({
-  network: new StacksTestnet(),
-  contractAddress: 'ST2NEB84ASENDXKYGJPQW86YXQCEFEX2ZQPG87ND',
-  contractName: 'router',
-  functionName: 'get-best-route',
-  functionArgs: [
-    principalCV('ST2NEB84ASENDXKYGJPQW86YXQCEFEX2ZQPG87ND.stx-token'),
-    principalCV('ST2NEB84ASENDXKYGJPQW86YXQCEFEX2ZQPG87ND.usda-token'),
-    uintCV(100000000), // 100 STX
-  ],
-  senderAddress: 'ST2NEB84ASENDXKYGJPQW86YXQCEFEX2ZQPG87ND',
-});
+Query current protocol fee in basis points.
+
+```clarity
+(get-protocol-fee) ;; => (ok u30) means 0.30%
 ```
 
----
+### get-fee-balance
+
+Query accumulated protocol fees for a token.
+
+```clarity
+(get-fee-balance (token principal)) ;; => (ok u50000)
+```
 
 ### is-paused
 
-Check if the contract is currently paused.
-
-**Function Signature:**
 ```clarity
-(define-read-only (is-paused)
-    (response bool uint)
-)
+(is-paused) ;; => (ok false)
 ```
-
-**Returns:**
-```clarity
-(ok true)  // Contract is paused
-(ok false) // Contract is active
-```
-
----
 
 ### get-dex-volume
 
-Get total volume routed through a specific DEX.
-
-**Function Signature:**
 ```clarity
-(define-read-only (get-dex-volume (dex-id uint))
-    (response uint uint)
-)
+(get-dex-volume (dex-id uint)) ;; => (ok u1000000)
 ```
-
-**Parameters:**
-- `dex-id`: DEX identifier (1=ALEX, 2=Velar)
-
-**Returns:**
-```clarity
-(ok u1000000000) // Total volume in micro-units
-```
-
----
 
 ### get-user-stats
 
-Get swap statistics for a specific user.
-
-**Function Signature:**
 ```clarity
-(define-read-only (get-user-stats (user principal))
-    (response {swap-count: uint, total-volume: uint} uint)
-)
-```
-
-**Returns:**
-```clarity
-(ok {
-  swap-count: u10,
-  total-volume: u5000000000
-})
+(get-user-stats (user principal))
+;; => (ok { swap-count: u10, total-volume: u5000000000 })
 ```
 
 ---
@@ -124,79 +63,83 @@ Get swap statistics for a specific user.
 
 ### execute-auto-swap
 
-Execute a token swap on the best available DEX.
+Execute a token swap on the best available DEX. Deducts a protocol fee (in basis points) from the input amount before routing.
 
-**Function Signature:**
 ```clarity
-(define-public (execute-auto-swap
+(execute-auto-swap
     (token-in <ft-trait>)
     (token-out <ft-trait>)
     (amount-in uint)
     (min-amount-out uint))
-    (response {...} uint)
-)
 ```
-
-**Parameters:**
-- `token-in`: Input token contract (must implement SIP-010)
-- `token-out`: Output token contract (must implement SIP-010)
-- `amount-in`: Amount to swap (micro-units)
-- `min-amount-out`: Minimum acceptable output (slippage protection)
 
 **Returns:**
 ```clarity
 (ok {
-  dex-used: u1,
-  amount-out: u95000000
+  dex-used: uint,       ;; 1 = ALEX, 2 = Velar
+  amount-out: uint,     ;; Actual output received
+  fee-charged: uint     ;; Protocol fee deducted from input
 })
 ```
 
-**Errors:**
-- `(err u101)`: Slippage too high (output < min-amount-out)
-- `(err u102)`: Invalid amount (amount-in = 0)
-- `(err u103)`: Contract paused
-- `(err u104)`: DEX call failed
+**Validation checks:**
+- Contract must not be paused (`u103`)
+- `amount-in` must be > 0 (`u102`) and < 1,000,000,000,000 (`u107`)
+- `token-in` and `token-out` must differ (`u108`)
+- `min-amount-out` must be <= `amount-in` (`u109`)
+- Output must meet `min-amount-out` (`u101`)
 
-**Example (JavaScript):**
-```javascript
-import { openContractCall } from '@stacks/connect';
+### set-protocol-fee (admin)
 
-await openContractCall({
-  network: new StacksTestnet(),
-  contractAddress: 'ST2NEB84ASENDXKYGJPQW86YXQCEFEX2ZQPG87ND',
-  contractName: 'router',
-  functionName: 'execute-auto-swap',
-  functionArgs: [
-    contractPrincipalCV('ST2NEB84ASENDXKYGJPQW86YXQCEFEX2ZQPG87ND', 'stx-token'),
-    contractPrincipalCV('ST2NEB84ASENDXKYGJPQW86YXQCEFEX2ZQPG87ND', 'usda-token'),
-    uintCV(100000000),  // 100 STX
-    uintCV(95000000),   // Min 95 USDA (5% slippage)
-  ],
-  onFinish: (data) => console.log('TX:', data.txId),
-});
-```
+Update the protocol fee. Bounded by `MAX-FEE-BPS` (100 = 1.00%).
 
----
-
-### set-paused
-
-Emergency pause/unpause the contract (admin only).
-
-**Function Signature:**
 ```clarity
-(define-public (set-paused (paused bool))
-    (response bool uint)
-)
+(set-protocol-fee (new-fee-bps uint)) ;; => (ok true)
 ```
 
-**Parameters:**
-- `paused`: true to pause, false to unpause
+### collect-fees (admin)
 
-**Authorization:**
-- Only `CONTRACT-OWNER` can call this function
+Withdraw accumulated protocol fees for a token.
 
-**Errors:**
-- `(err u100)`: Not authorized (caller is not owner)
+```clarity
+(collect-fees (token <ft-trait>) (recipient principal)) ;; => (ok u50000)
+```
+
+### set-paused (admin)
+
+Emergency pause or unpause the contract.
+
+```clarity
+(set-paused (paused bool)) ;; => (ok true)
+```
+
+### init-alex-pools (admin)
+
+Initialize default ALEX pool factor mappings. Call once after deployment.
+
+```clarity
+(init-alex-pools) ;; => (ok true)
+```
+
+### add-alex-pool (admin)
+
+Register a new ALEX pool factor pair.
+
+```clarity
+(add-alex-pool (token-x principal) (token-y principal) (factor-x uint) (factor-y uint))
+```
+
+### emergency-recover-token (admin)
+
+Recover stuck tokens. Only callable when contract is paused.
+
+```clarity
+(emergency-recover-token (token <ft-trait>) (amount uint) (recipient principal))
+```
+
+### propose-admin-transfer / accept-admin-transfer
+
+Two-step admin transfer. Note: `CONTRACT-OWNER` is a constant, so actual transfer requires redeployment.
 
 ---
 
@@ -204,79 +147,55 @@ Emergency pause/unpause the contract (admin only).
 
 | Code | Constant | Description |
 |------|----------|-------------|
-| 100 | `ERR-NOT-AUTHORIZED` | Caller lacks permission |
-| 101 | `ERR-SLIPPAGE-TOO-HIGH` | Output below minimum |
-| 102 | `ERR-INVALID-AMOUNT` | Amount is zero |
-| 103 | `ERR-CONTRACT-PAUSED` | Contract is paused |
-| 104 | `ERR-DEX-CALL-FAILED` | DEX integration error |
+| u100 | `ERR-NOT-AUTHORIZED` | Caller is not contract owner |
+| u101 | `ERR-SLIPPAGE-TOO-HIGH` | Output below `min-amount-out` |
+| u102 | `ERR-INVALID-AMOUNT` | Amount is zero |
+| u103 | `ERR-CONTRACT-PAUSED` | Contract is paused |
+| u104 | `ERR-DEX-CALL-FAILED` | DEX routing error |
+| u105 | `ERR-NO-LIQUIDITY` | Both DEXs returned zero |
+| u106 | `ERR-BOTH-DEXS-FAILED` | Both DEX calls failed |
+| u107 | `ERR-AMOUNT-TOO-LARGE` | Input exceeds max bound |
+| u108 | `ERR-SAME-TOKEN` | Input and output tokens match |
+| u109 | `ERR-INVALID-SLIPPAGE` | `min-amount-out` > `amount-in` |
+| u112 | `ERR-FEE-TRANSFER-FAILED` | Fee transfer failed |
+| u113 | `ERR-FEE-TOO-HIGH` | Fee exceeds `MAX-FEE-BPS` (100) |
+| u114 | `ERR-NO-FEE-TO-COLLECT` | No fees accumulated for token |
+| u200 | `ERR-ALEX-POOL-NOT-FOUND` | ALEX pool not configured |
+| u201 | `ERR-ALEX-QUOTE-FAILED` | ALEX quote call failed |
+| u210 | `ERR-VELAR-QUOTE-FAILED` | Velar quote call failed |
+| u211 | `ERR-VELAR-SWAP-FAILED` | Velar swap call failed |
 
 ---
 
-## Events
+## Usage Example
 
-Currently, the contract does not emit custom events. Transaction success/failure can be monitored via the Stacks API.
-
----
-
-## Rate Limits
-
-When using the Stacks API:
-- **Read-only calls**: No limit (processed by nodes)
-- **Write transactions**: Limited by block time (~10 seconds on testnet)
-
----
-
-## Best Practices
-
-### Slippage Calculation
 ```javascript
-const slippagePercent = 0.5; // 0.5%
-const minAmountOut = expectedAmount * (1 - slippagePercent / 100);
+import { callReadOnlyFunction, openContractCall, principalCV, uintCV, contractPrincipalCV } from '@stacks/transactions';
+import { openContractCall } from '@stacks/connect';
+
+// 1. Get quote
+const quote = await callReadOnlyFunction({
+  contractAddress: 'ST...',
+  contractName: 'router',
+  functionName: 'get-best-route',
+  functionArgs: [
+    principalCV('ST....token-a'),
+    principalCV('ST....token-b'),
+    uintCV(100000000),
+  ],
+  senderAddress: 'ST...',
+});
+
+// 2. Execute swap with slippage protection
+await openContractCall({
+  contractAddress: 'ST...',
+  contractName: 'router',
+  functionName: 'execute-auto-swap',
+  functionArgs: [
+    contractPrincipalCV('ST...', 'token-a'),
+    contractPrincipalCV('ST...', 'token-b'),
+    uintCV(100000000),
+    uintCV(95000000), // 5% slippage tolerance
+  ],
+});
 ```
-
-### Amount Conversion
-```javascript
-// STX to microSTX
-const microStx = stxAmount * 1_000_000;
-
-// microSTX to STX
-const stx = microStx / 1_000_000;
-```
-
-### Error Handling
-```javascript
-try {
-  const result = await executeSwap(...);
-  if (result.success) {
-    console.log('Swap successful:', result.value);
-  }
-} catch (error) {
-  if (error.message.includes('u101')) {
-    alert('Slippage too high. Try increasing slippage tolerance.');
-  }
-}
-```
-
----
-
-## Testing Endpoints
-
-### Testnet Faucet
-Get testnet STX: https://explorer.hiro.so/sandbox/faucet?chain=testnet
-
-### Explorer
-View transactions: https://explorer.hiro.so/txid/0x...?chain=testnet
-
-### API Base URL
-```
-https://api.testnet.hiro.so
-```
-
----
-
-## Support
-
-For API issues or questions:
-- Open an issue on GitHub
-- Check [Stacks Documentation](https://docs.stacks.co)
-- Join [Stacks Discord](https://discord.gg/stacks)
