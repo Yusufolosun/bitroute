@@ -33,6 +33,7 @@ export interface BestRouteResponse {
 export interface SwapResult {
   dexUsed: number;
   amountOut: bigint;
+  feeCharged: bigint;
 }
 
 /**
@@ -244,5 +245,55 @@ export function getDexName(dexId: number): string {
       return 'Velar';
     default:
       return 'Unknown';
+  }
+}
+
+/**
+ * Get the current protocol fee in basis points (read-only)
+ */
+export async function getProtocolFee(): Promise<number> {
+  const network = getNetwork();
+  const contractAddress = CONTRACT_ADDRESS[DEFAULT_NETWORK];
+  
+  try {
+    const result = await callReadOnlyFunction({
+      network,
+      contractAddress,
+      contractName: CONTRACT_NAME,
+      functionName: 'get-protocol-fee',
+      functionArgs: [],
+      senderAddress: contractAddress,
+    });
+
+    const parsed = parseClarityValue(result);
+    return parsed.success ? Number(parsed.value) : 30; // default 30 bps
+  } catch (error) {
+    console.error('Error getting protocol fee:', error);
+    return 30;
+  }
+}
+
+/**
+ * Get accumulated fee balance for a specific token (read-only)
+ */
+export async function getFeeBalance(tokenPrincipal: string): Promise<bigint> {
+  const network = getNetwork();
+  const contractAddress = CONTRACT_ADDRESS[DEFAULT_NETWORK];
+  
+  try {
+    const result = await callReadOnlyFunction({
+      network,
+      contractAddress,
+      contractName: CONTRACT_NAME,
+      functionName: 'get-fee-balance',
+      functionArgs: [toPrincipalCV(tokenPrincipal)],
+      senderAddress: contractAddress,
+    });
+
+    const parsed = parseClarityValue(result);
+    return parsed.success ? BigInt(parsed.value) : BigInt(0);
+  } catch (error) {
+    console.error('Error getting fee balance:', error);
+    return BigInt(0);
   }
 }
