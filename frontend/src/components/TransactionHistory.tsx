@@ -3,6 +3,8 @@
 import { useTransaction } from '@/contexts/TransactionContext';
 import { TransactionStatus, Transaction } from '@/types/transaction';
 import { useState } from 'react';
+import { txUrl } from '@/lib/stacks';
+import { DEFAULT_NETWORK } from '@/lib/constants';
 
 export default function TransactionHistory() {
   const { history, clearHistory } = useTransaction();
@@ -142,7 +144,7 @@ export default function TransactionHistory() {
             </div>
             <span className="text-xs text-gray-400 dark:text-gray-500">{new Date(tx.timestamp).toLocaleTimeString()}</span>
             <a
-              href={`https://explorer.hiro.so/txid/${tx.txId}?chain=testnet`}
+              href={txUrl(tx.txId, DEFAULT_NETWORK === 'mainnet' ? 'mainnet' : 'testnet')}
               target="_blank"
               rel="noopener noreferrer"
               className="text-xs text-orange-600 dark:text-orange-400 hover:underline"
