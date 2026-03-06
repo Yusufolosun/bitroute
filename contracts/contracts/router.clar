@@ -480,6 +480,50 @@
 ;; Included as safety mechanism in case of unexpected token transfers
 ;; Can only be called when paused, preventing abuse during normal operation
 
+;; set-protocol-fee
+;;
+;; Description: Admin function to update the protocol fee in basis points.
+;;   Bounded by MAX-FEE-BPS (100 bps = 1.00%) to prevent abuse.
+;; Parameters:
+;;   - new-fee-bps: New fee in basis points (0-100)
+(define-public (set-protocol-fee (new-fee-bps uint))
+  (begin
+    (asserts! (is-eq tx-sender CONTRACT-OWNER) ERR-NOT-AUTHORIZED)
+    (asserts! (<= new-fee-bps MAX-FEE-BPS) ERR-FEE-TOO-HIGH)
+    (ok (var-set protocol-fee-bps new-fee-bps))
+  )
+)
+
+;; collect-fees
+;;
+;; Description: Admin withdraws accumulated protocol fees for a specific token.
+;;   Transfers the full balance from the contract to the specified recipient.
+;; Parameters:
+;;   - token: The token to collect fees for
+;;   - recipient: Where to send the collected fees
+(define-public (collect-fees
+    (token <ft-trait>)
+    (recipient principal))
+  (let (
+    (token-principal (contract-of token))
+    (fee-entry (default-to { balance: u0 } (map-get? fee-balances { token: token-principal })))
+    (amount (get balance fee-entry))
+  )
+    (asserts! (is-eq tx-sender CONTRACT-OWNER) ERR-NOT-AUTHORIZED)
+    (asserts! (> amount u0) ERR-NO-FEE-TO-COLLECT)
+    
+    ;; Transfer fees from contract to recipient
+    (unwrap! (as-contract (contract-call? token transfer amount tx-sender recipient none)) ERR-FEE-TRANSFER-FAILED)
+    
+    ;; Reset fee balance to zero
+    (map-set fee-balances
+      { token: token-principal }
+      { balance: u0 })
+    
+    (ok amount)
+  )
+)
+
 ;; -----------------------------------
 ;; Read-Only Helpers
 ;; -----------------------------------
@@ -520,6 +564,31 @@
     (default-to 
       { swap-count: u0, total-volume: u0 }
       (map-get? user-swaps { user: user })
+    )
+  )
+)
+
+;; get-protocol-fee
+;;
+;; Description: Query the current protocol fee in basis points
+;; Returns: Current fee in bps (e.g. u30 = 0.30%)
+(define-read-only (get-protocol-fee)
+  (ok (var-get protocol-fee-bps))
+)
+
+;; get-fee-balance
+;;
+;; Description: Query accumulated protocol fees for a specific token
+;; Parameters:
+;;   - token: Contract principal of the token
+;; Returns: Accumulated fee balance in smallest token units
+(define-read-only (get-fee-balance (token principal))
+  (ok 
+    (get balance 
+      (default-to 
+        { balance: u0 }
+        (map-get? fee-balances { token: token })
+      )
     )
   )
 )
