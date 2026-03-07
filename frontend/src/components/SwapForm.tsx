@@ -11,6 +11,7 @@ import { useTransaction } from '@/contexts/TransactionContext';
 import { TransactionStatus } from '@/types/transaction';
 import QuoteSkeleton from './QuoteSkeleton';
 import { trackQuote, trackSwap } from '@/lib/analytics';
+import { bps, fees, slippage as slippageCalc } from '@yusufolosun/defikit';
 
 export default function SwapForm() {
   const { isConnected, userAddress } = useWallet();
@@ -97,7 +98,10 @@ export default function SwapForm() {
     }
 
     // Calculate minimum amount out based on slippage
-    const minOut = parseFloat(amountOut) * (1 - parseFloat(slippage) / 100);
+    const slippageBps = Math.round(parseFloat(slippage) * 100); // e.g. 0.5% → 50 bps
+    const expectedOutMicro = BigInt(Math.round(parseFloat(amountOut) * 1_000_000));
+    const minOutMicro = slippageCalc.minOutput(expectedOutMicro, slippageBps);
+    const minOut = Number(minOutMicro) / 1_000_000;
     
     // Use token addresses directly (all tokens now have valid contract addresses)
     const tokenInAddress = tokenIn.address!;
@@ -273,10 +277,10 @@ export default function SwapForm() {
         <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-3 space-y-2">
           <div className="flex justify-between items-center">
             <span className="text-sm text-gray-600 dark:text-gray-400">
-              Protocol Fee ({(PROTOCOL_FEE_BPS / 100).toFixed(2)}%)
+              Protocol Fee ({bps.toPercent(PROTOCOL_FEE_BPS).toFixed(2)}%)
             </span>
             <span className="font-semibold text-gray-900 dark:text-white">
-              {(parseFloat(amountIn) * PROTOCOL_FEE_BPS / 10000).toFixed(6)} {tokenIn?.symbol}
+              {(parseFloat(amountIn) * bps.toDecimal(PROTOCOL_FEE_BPS)).toFixed(6)} {tokenIn?.symbol}
             </span>
           </div>
           <div className="flex justify-between items-center">
@@ -292,7 +296,7 @@ export default function SwapForm() {
               Amount to DEX
             </span>
             <span className="font-semibold text-gray-900 dark:text-white">
-              {(parseFloat(amountIn) * (1 - PROTOCOL_FEE_BPS / 10000)).toFixed(6)} {tokenIn?.symbol}
+              {(parseFloat(amountIn) * (1 - bps.toDecimal(PROTOCOL_FEE_BPS))).toFixed(6)} {tokenIn?.symbol}
             </span>
           </div>
         </div>
@@ -503,7 +507,12 @@ export default function SwapForm() {
           <div className="flex justify-between items-center pt-2 border-t border-blue-200 dark:border-blue-800">
             <span className="text-sm text-gray-600 dark:text-gray-400">Minimum Received</span>
             <span className="font-semibold text-gray-900 dark:text-white">
-              {(parseFloat(amountOut) * (1 - parseFloat(slippage) / 100)).toFixed(6)} {tokenOut.symbol}
+              {(() => {
+                const slippageBps = Math.round(parseFloat(slippage) * 100);
+                const expectedMicro = BigInt(Math.round(parseFloat(amountOut) * 1_000_000));
+                const minReceived = slippageCalc.minOutput(expectedMicro, slippageBps);
+                return (Number(minReceived) / 1_000_000).toFixed(6);
+              })()} {tokenOut.symbol}
             </span>
           </div>
         </div>

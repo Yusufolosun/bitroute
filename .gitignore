@@ -65,3 +65,7 @@ contracts/deployments/*.yaml.bak
 
 # Screenshots (keep in docs/)
 !docs/screenshots/
+
+# NPM auth tokens (never commit)
+.npmrc
+frontend/.npmrc
